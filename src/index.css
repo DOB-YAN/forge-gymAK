@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg font-medium text-white transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-center text-lg font-semibold
+           focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+           transition-all duration-200;
+  }
+
+  .tab-active {
+    @apply text-blue-500 border-blue-500;
+  }
+
+  .tab-inactive {
+    @apply text-gray-400 border-transparent hover:text-gray-600 hover:border-gray-300;
+  }
+}
+
+/* Page transitions */
+.page-enter {
+  animation: fadeInUp 0.35s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideUp {
+  opacity: 0;
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-stagger > * {
+  opacity: 0;
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.animate-stagger > *:nth-child(1) { animation-delay: 50ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 100ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 150ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 200ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 250ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.animate-stagger > *:nth-child(7) { animation-delay: 350ms; }
+.animate-stagger > *:nth-child(8) { animation-delay: 400ms; }
+.animate-stagger > *:nth-child(9) { animation-delay: 450ms; }
+.animate-stagger > *:nth-child(10) { animation-delay: 500ms; }
+.animate-stagger > *:nth-child(11) { animation-delay: 550ms; }
+.animate-stagger > *:nth-child(12) { animation-delay: 600ms; }

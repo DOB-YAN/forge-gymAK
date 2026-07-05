@@ -1,0 +1,65 @@
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import type { BodyMetrics, BodyMetricsData, UserId } from '../types';
+import { formatDateKey } from '../utils/dates';
+
+interface BodyContextType {
+  bodyMetrics: BodyMetricsData;
+  getMetrics: (userId: UserId, dateKey: string) => BodyMetrics | undefined;
+  saveMetrics: (userId: UserId, weightKg: number, heightCm: number) => void;
+  getAllMetrics: (userId: UserId) => BodyMetrics[];
+}
+
+const STORAGE_KEY = 'forge_gym_body_metrics';
+
+function loadFromStorage(): BodyMetricsData {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+function saveToStorage(data: BodyMetricsData) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {}
+}
+
+const BodyContext = createContext<BodyContextType | null>(null);
+
+export function BodyProvider({ children }: { children: ReactNode }) {
+  const [bodyMetrics, setBodyMetrics] = useState<BodyMetricsData>(loadFromStorage);
+
+  const getMetrics = useCallback((userId: UserId, dateKey: string) => {
+    return bodyMetrics[userId]?.[dateKey];
+  }, [bodyMetrics]);
+
+  const saveMetrics = useCallback((userId: UserId, weightKg: number, heightCm: number) => {
+    setBodyMetrics((prev) => {
+      const dateKey = formatDateKey(new Date());
+      const newData = structuredClone(prev);
+      if (!newData[userId]) newData[userId] = {};
+      newData[userId][dateKey] = { dateKey, weightKg, heightCm, timestamp: Date.now() };
+      saveToStorage(newData);
+      return newData;
+    });
+  }, []);
+
+  const getAllMetrics = useCallback((userId: UserId) => {
+    const data = bodyMetrics[userId];
+    if (!data) return [];
+    return Object.values(data).filter(Boolean) as BodyMetrics[];
+  }, [bodyMetrics]);
+
+  return (
+    <BodyContext.Provider value={{ bodyMetrics, getMetrics, saveMetrics, getAllMetrics }}>
+      {children}
+    </BodyContext.Provider>
+  );
+}
+
+export function useBody(): BodyContextType {
+  const ctx = useContext(BodyContext);
+  if (!ctx) throw new Error('useBody must be used within BodyProvider');
+  return ctx;
+}
