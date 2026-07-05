@@ -1,32 +1,45 @@
-# React + TypeScript + Vite
+# FORGE Gym Tracker AK 💪
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A mobile-first workout tracking application for Abel and Keneni. Track your daily workouts, log sets (weight × reps), compare progress, and sync in real-time via Firebase.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Today's Workout** — Pre-configured weekly schedule (Mon-Sun) with preset exercises. Log weight (kg) and reps per set, up to 6 sets per exercise.
+- **Two Users** — Toggle between Abel (blue) and Keneni (green) to log individual workouts.
+- **Rest Timer** — Set 1-5 minute rest timer with a floating popup. Plays a chord sound when done.
+- **Progress Charts** — View max weight, total reps, and volume over time for any exercise. Side-by-side comparison of Abel vs Keneni.
+- **Muscle Group Analysis** — See total volume by muscle group to identify imbalances.
+- **Body Metrics** — Track weight and height over time with trend charts.
+- **History** — Monthly summaries with volume trends and expandable daily details.
+- **Real-time Sync** — Firebase Realtime Database syncs data between both users automatically.
+- **Offline Backup** — All data saved to localStorage so it works without internet.
+- **Data Export/Import** — Backup your data as JSON.
+- **PWA** — Installable on your phone's home screen.
+- **GitHub Pages** — Auto-deployed on push to main branch.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19** + **TypeScript** + **Vite**
+- **Tailwind CSS 4** for styling
+- **Firebase Realtime Database** for cloud sync
+- **Recharts** for charts
+- **React Router v7** for navigation
+- **vite-plugin-pwa** for PWA support
+- **GitHub Actions** for CI/CD
 
-## Expanding the Oxlint configuration
+## Getting Started
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Firebase Setup
+
+Create a `.env` file in the project root with your Firebase config (see `.env.example`).
+
+## Deployment
+
+Push to the `main` branch — GitHub Actions automatically builds and deploys to:
+
+**https://dob-yan.github.io/forge-gymAK/**
