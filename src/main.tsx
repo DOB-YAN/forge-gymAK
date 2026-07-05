@@ -19,7 +19,7 @@ if (redirect) {
 }
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/forge-gymAK">
       <UserProvider>
         <WorkoutProvider>
           <TimerProvider>

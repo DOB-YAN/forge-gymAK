@@ -17,10 +17,10 @@ export default defineConfig({
         background_color: '#FFFFFF',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/forge-gymAK/',
         icons: [
           {
-            src: '/favicon.svg',
+            src: '/forge-gymAK/favicon.svg',
             sizes: '192x192',
             type: 'image/svg+xml',
           },
@@ -31,5 +31,5 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/',
+  base: '/forge-gymAK/',
 });
