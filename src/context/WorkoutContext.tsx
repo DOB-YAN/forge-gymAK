@@ -1,6 +1,13 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { WorkoutData, DayWorkout, UserId, ExerciseLog, SetRecord, ExercisePattern, DayOfWeek } from '../types';
-import { isFirebaseConfigured, subscribeToWorkouts, saveWorkoutToFirebase as fbSave } from '../services/firebase';
+import {
+  isFirebaseConfigured,
+  subscribeToWorkouts,
+  saveWorkoutToFirebase as fbSave,
+  saveDeletedExercisesToFirebase as fbSaveDeleted,
+  subscribeToDeletedExercises,
+  loadDeletedExercisesFromFirebase,
+} from '../services/firebase';
 
 const DAYS: DayOfWeek[] = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
 
@@ -11,11 +18,13 @@ function getDayOfWeekFromDateKey(dateKey: string): DayOfWeek {
 
 interface WorkoutContextType {
   workoutData: WorkoutData;
+  deletedExercises: Record<string, number[]>;
   getDayWorkout: (userId: UserId, dateKey: string) => DayWorkout | undefined;
   addExercise: (userId: UserId, dateKey: string, exerciseName: string, pattern: ExercisePattern, numSets: number) => void;
   updateSet: (userId: UserId, dateKey: string, exerciseIndex: number, setIndex: number, weightKg: number, reps: number) => void;
   addSet: (userId: UserId, dateKey: string, exerciseIndex: number) => void;
   removeSet: (userId: UserId, dateKey: string, exerciseIndex: number, setIndex: number) => void;
+  deleteExercise: (dayOfWeek: string, exerciseIndex: number) => void;
   toggleCompleted: (userId: UserId, dateKey: string) => void;
   importData: (data: WorkoutData) => void;
   exportData: () => WorkoutData;
@@ -23,31 +32,34 @@ interface WorkoutContextType {
 }
 
 const STORAGE_KEY = 'forge_gym_workout_data';
+const DELETED_KEY = 'forge_gym_deleted_exercises';
 
-function loadFromStorage(): WorkoutData {
+function loadFromStorage<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return {};
+  return fallback;
 }
 
-function saveToStorage(data: WorkoutData) {
+function saveToStorage(key: string, data: unknown) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(key, JSON.stringify(data));
   } catch {}
 }
 
 const WorkoutContext = createContext<WorkoutContextType | null>(null);
 
 export function WorkoutProvider({ children }: { children: ReactNode }) {
-  const [workoutData, setWorkoutData] = useState<WorkoutData>(loadFromStorage);
+  const [workoutData, setWorkoutData] = useState<WorkoutData>(() => loadFromStorage(STORAGE_KEY, {}));
+  const [deletedExercises, setDeletedExercises] = useState<Record<string, number[]>>(() => loadFromStorage(DELETED_KEY, {}));
   const [firebaseConfigured, setFirebaseConfigured] = useState(false);
   const fbSaveRef = useRef(fbSave);
+  const fbSaveDeletedRef = useRef(fbSaveDeleted);
 
-  useEffect(() => {
-    saveToStorage(workoutData);
-  }, [workoutData]);
+  // Persist to localStorage on changes
+  useEffect(() => { saveToStorage(STORAGE_KEY, workoutData); }, [workoutData]);
+  useEffect(() => { saveToStorage(DELETED_KEY, deletedExercises); }, [deletedExercises]);
 
   // Initialize Firebase sync
   useEffect(() => {
@@ -55,23 +67,37 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setFirebaseConfigured(configured);
     if (!configured) return;
 
-    const unsubscribe = subscribeToWorkouts((remoteData) => {
+    // Subscribe to workout data - OVERWRITE local data with remote data for proper sync
+    const unsubWorkouts = subscribeToWorkouts((remoteData) => {
       setWorkoutData((prev) => {
+        // Merge strategy: remote data takes precedence (overwrites local)
         const merged = { ...prev };
         for (const [userId, days] of Object.entries(remoteData)) {
-          if (!merged[userId]) merged[userId] = {};
-          for (const [dateKey, day] of Object.entries(days)) {
-            if (day && !merged[userId]![dateKey]) {
-              merged[userId]![dateKey] = day;
-            }
-          }
+          merged[userId] = { ...merged[userId], ...days };
         }
-        saveToStorage(merged);
         return merged;
       });
     });
 
-    return () => unsubscribe();
+    // Subscribe to deleted exercises - same overwrite strategy
+    const unsubDeleted = subscribeToDeletedExercises((remoteDeleted) => {
+      setDeletedExercises((prev) => ({
+        ...prev,
+        ...remoteDeleted,
+      }));
+    });
+
+    // Also load deleted exercises on mount to catch any missed updates
+    loadDeletedExercisesFromFirebase().then((remote) => {
+      if (remote) {
+        setDeletedExercises((prev) => ({ ...prev, ...remote }));
+      }
+    }).catch(() => {});
+
+    return () => {
+      unsubWorkouts();
+      unsubDeleted();
+    };
   }, []);
 
   const getDayWorkout = useCallback((userId: UserId, dateKey: string) => {
@@ -83,6 +109,24 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       fbSaveRef.current(userId, dateKey, workout).catch(() => {});
     }
   }, [firebaseConfigured]);
+
+  const syncDeletedToFirebase = useCallback((deleted: Record<string, number[]>) => {
+    if (firebaseConfigured) {
+      fbSaveDeletedRef.current(deleted).catch(() => {});
+    }
+  }, [firebaseConfigured]);
+
+  const deleteExercise = useCallback((dayOfWeek: string, exerciseIndex: number) => {
+    setDeletedExercises((prev) => {
+      const existing = [...(prev[dayOfWeek] || [])];
+      if (!existing.includes(exerciseIndex)) {
+        existing.push(exerciseIndex);
+      }
+      const updated = { ...prev, [dayOfWeek]: existing };
+      syncDeletedToFirebase(updated);
+      return updated;
+    });
+  }, [syncDeletedToFirebase]);
 
   const addExercise = useCallback((
     userId: UserId,
@@ -174,17 +218,21 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
 
   const clearAllData = useCallback(() => {
     setWorkoutData({});
+    setDeletedExercises({});
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DELETED_KEY);
   }, []);
 
   return (
     <WorkoutContext.Provider value={{
       workoutData,
+      deletedExercises,
       getDayWorkout,
       addExercise,
       updateSet,
       addSet,
       removeSet,
+      deleteExercise,
       toggleCompleted,
       importData,
       exportData,

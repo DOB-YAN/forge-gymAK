@@ -1,6 +1,11 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { BodyMetrics, BodyMetricsData, UserId } from '../types';
 import { formatDateKey } from '../utils/dates';
+import {
+  isFirebaseConfigured,
+  subscribeToBodyMetrics,
+  saveBodyMetricsToFirebase as fbSaveBody,
+} from '../services/firebase';
 
 interface BodyContextType {
   bodyMetrics: BodyMetricsData;
@@ -19,16 +24,41 @@ function loadFromStorage(): BodyMetricsData {
   return {};
 }
 
-function saveToStorage(data: BodyMetricsData) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
-}
-
 const BodyContext = createContext<BodyContextType | null>(null);
 
 export function BodyProvider({ children }: { children: ReactNode }) {
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetricsData>(loadFromStorage);
+
+  // Persist to localStorage on changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bodyMetrics));
+    } catch {}
+  }, [bodyMetrics]);
+
+  // Initialize Firebase sync
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
+
+    // Subscribe to remote body metrics - overwrite local with remote
+    const unsubscribe = subscribeToBodyMetrics((remoteData) => {
+      setBodyMetrics((prev) => {
+        const merged = { ...prev };
+        for (const [userId, dates] of Object.entries(remoteData)) {
+          merged[userId] = { ...merged[userId], ...dates };
+        }
+        return merged;
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const saveMetricsToFirebase = useCallback((data: BodyMetricsData) => {
+    if (isFirebaseConfigured()) {
+      fbSaveBody(data).catch(() => {});
+    }
+  }, []);
 
   const getMetrics = useCallback((userId: UserId, dateKey: string) => {
     return bodyMetrics[userId]?.[dateKey];
@@ -40,10 +70,10 @@ export function BodyProvider({ children }: { children: ReactNode }) {
       const newData = structuredClone(prev);
       if (!newData[userId]) newData[userId] = {};
       newData[userId][dateKey] = { dateKey, weightKg, heightCm, timestamp: Date.now() };
-      saveToStorage(newData);
+      saveMetricsToFirebase(newData);
       return newData;
     });
-  }, []);
+  }, [saveMetricsToFirebase]);
 
   const getAllMetrics = useCallback((userId: UserId) => {
     const data = bodyMetrics[userId];

@@ -7,7 +7,7 @@ import {
   onValue,
   type Unsubscribe,
 } from 'firebase/database';
-import type { WorkoutData, UserId } from '../types';
+import type { WorkoutData, UserId, BodyMetricsData } from '../types';
 
 // Firebase configuration - user needs to fill in their own values
 const FIREBASE_CONFIG = {
@@ -44,6 +44,10 @@ function getDatabaseInstance() {
 }
 
 const WORKOUT_PATH = 'forge-gymAK/workouts';
+const DELETED_PATH = 'forge-gymAK/deletedExercises';
+const BODY_PATH = 'forge-gymAK/bodyMetrics';
+
+// ─── Workout Data Sync ───
 
 export async function saveWorkoutToFirebase(
   userId: UserId,
@@ -90,6 +94,100 @@ export function subscribeToWorkouts(
     return () => {};
   }
 }
+
+// ─── Deleted Exercises Sync ───
+
+export async function saveDeletedExercisesToFirebase(
+  deleted: Record<string, number[]>
+): Promise<void> {
+  try {
+    const db = getDatabaseInstance();
+    const deletedRef = ref(db, DELETED_PATH);
+    await set(deletedRef, deleted);
+  } catch (error) {
+    console.warn('Firebase deleted exercises save failed:', error);
+  }
+}
+
+export async function loadDeletedExercisesFromFirebase(): Promise<Record<string, number[]> | null> {
+  try {
+    const db = getDatabaseInstance();
+    const deletedRef = ref(db, DELETED_PATH);
+    const snapshot = await get(deletedRef);
+    if (snapshot.exists()) {
+      return snapshot.val() as Record<string, number[]>;
+    }
+    return null;
+  } catch (error) {
+    console.warn('Firebase deleted exercises load failed:', error);
+    return null;
+  }
+}
+
+export function subscribeToDeletedExercises(
+  callback: (data: Record<string, number[]>) => void
+): Unsubscribe {
+  try {
+    const db = getDatabaseInstance();
+    const deletedRef = ref(db, DELETED_PATH);
+    return onValue(deletedRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.val() as Record<string, number[]>);
+      }
+    });
+  } catch (error) {
+    console.warn('Firebase deleted exercises subscription failed:', error);
+    return () => {};
+  }
+}
+
+// ─── Body Metrics Sync ───
+
+export async function saveBodyMetricsToFirebase(
+  data: BodyMetricsData
+): Promise<void> {
+  try {
+    const db = getDatabaseInstance();
+    const bodyRef = ref(db, BODY_PATH);
+    await set(bodyRef, data);
+  } catch (error) {
+    console.warn('Firebase body metrics save failed:', error);
+  }
+}
+
+export async function loadBodyMetricsFromFirebase(): Promise<BodyMetricsData | null> {
+  try {
+    const db = getDatabaseInstance();
+    const bodyRef = ref(db, BODY_PATH);
+    const snapshot = await get(bodyRef);
+    if (snapshot.exists()) {
+      return snapshot.val() as BodyMetricsData;
+    }
+    return null;
+  } catch (error) {
+    console.warn('Firebase body metrics load failed:', error);
+    return null;
+  }
+}
+
+export function subscribeToBodyMetrics(
+  callback: (data: BodyMetricsData) => void
+): Unsubscribe {
+  try {
+    const db = getDatabaseInstance();
+    const bodyRef = ref(db, BODY_PATH);
+    return onValue(bodyRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.val() as BodyMetricsData);
+      }
+    });
+  } catch (error) {
+    console.warn('Firebase body metrics subscription failed:', error);
+    return () => {};
+  }
+}
+
+// ─── Utils ───
 
 export function isFirebaseConfigured(): boolean {
   return Object.values(FIREBASE_CONFIG).every((v) => v !== '');

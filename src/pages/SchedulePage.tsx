@@ -1,24 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useWorkout } from '../context/WorkoutContext';
 import { useUser } from '../context/UserContext';
 import { WEEKLY_SCHEDULE } from '../data/schedule';
 import type { ExercisePattern } from '../types';
-
-const DELETED_KEY = 'forge_gym_deleted_exercises';
-
-function loadDeletedExercises(): Record<string, number[]> {
-  try {
-    const raw = localStorage.getItem(DELETED_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return {};
-}
-
-function saveDeletedExercises(data: Record<string, number[]>) {
-  try {
-    localStorage.setItem(DELETED_KEY, JSON.stringify(data));
-  } catch {}
-}
 
 interface AddExerciseFormProps {
   dateKey: string;
@@ -106,21 +90,7 @@ function AddExerciseForm({ dateKey, onClose }: AddExerciseFormProps) {
 export default function SchedulePage() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [addingToDay, setAddingToDay] = useState<string | null>(null);
-  const [deletedExercises, setDeletedExercises] = useState<Record<string, number[]>>(loadDeletedExercises);
-
-  useEffect(() => {
-    saveDeletedExercises(deletedExercises);
-  }, [deletedExercises]);
-
-  const handleDeleteExercise = (dayOfWeek: string, exerciseIndex: number) => {
-    setDeletedExercises((prev) => {
-      const existing = [...(prev[dayOfWeek] || [])];
-      if (!existing.includes(exerciseIndex)) {
-        existing.push(exerciseIndex);
-      }
-      return { ...prev, [dayOfWeek]: existing };
-    });
-  };
+  const { deletedExercises, deleteExercise } = useWorkout();
 
   return (
     <div className="space-y-3 page-enter">
@@ -199,7 +169,7 @@ export default function SchedulePage() {
                           <span className="text-xs" style={{ color: 'rgba(148,163,184,0.4)' }}>{ex.defaultSets} sets</span>
                         </div>
                         <button
-                          onClick={() => handleDeleteExercise(day.dayOfWeek, i)}
+                          onClick={() => deleteExercise(day.dayOfWeek, i)}
                           className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
                           style={{ color: 'rgba(239,68,68,0.5)' }}
                           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
