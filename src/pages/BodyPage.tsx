@@ -14,6 +14,7 @@ export default function BodyPage() {
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [saved, setSaved] = useState(false);
+  const [logForUser, setLogForUser] = useState<UserId>(activeUser);
 
   const allMetrics = getAllMetrics(activeUser);
 
@@ -56,7 +57,7 @@ export default function BodyPage() {
     const w = parseFloat(weight);
     const h = parseFloat(height);
     if (!w || !h) return;
-    saveMetrics(activeUser, w, h);
+    saveMetrics(logForUser, w, h);
     setWeight('');
     setHeight('');
     setSaved(true);
@@ -121,26 +122,42 @@ export default function BodyPage() {
         </div>
       )}
 
+      {/* User selector */}
+      <div className="flex rounded-xl p-1 gap-1 border border-white/40" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3))' }}>
+        {(['abel', 'keneni'] as UserId[]).map((user) => (
+          <button
+            key={user}
+            onClick={() => setLogForUser(user)}
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+              logForUser === user
+                ? 'bg-white/90 text-gray-800 shadow-sm scale-[1.02]'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            style={{
+              color: logForUser === user ? USER_COLORS[user].primary : undefined,
+            }}
+          >
+            {user.charAt(0).toUpperCase() + user.slice(1)}
+          </button>
+        ))}
+      </div>
+
       {/* Toggle both users */}
-      <div className="flex items-center justify-between card">
+      <div className="flex items-center justify-between card-gradient">
         <span className="text-sm font-medium text-gray-500">Show both users</span>
         <button
           onClick={() => setShowBoth(!showBoth)}
-          className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
-            showBoth ? 'bg-blue-500' : 'bg-gray-300'
-          }`}
+          className={`${showBoth ? 'toggle active' : 'toggle inactive'}`}
         >
-          <span
-            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-              showBoth ? 'translate-x-5' : ''
-            }`}
-          />
+          <span className="toggle-knob" />
         </button>
       </div>
 
       {/* Log form */}
-      <form onSubmit={handleSave} className="card">
-        <h3 className="text-sm font-semibold text-gray-500 mb-3">Log {activeUser.charAt(0).toUpperCase() + activeUser.slice(1)}'s Measurements</h3>
+      <form onSubmit={handleSave} className="card" style={{ borderLeft: `3px solid ${USER_COLORS[logForUser].primary}` }}>
+        <h3 className="text-sm font-semibold mb-3" style={{ color: USER_COLORS[logForUser].primary }}>
+          Log {logForUser.charAt(0).toUpperCase() + logForUser.slice(1)}'s Measurements
+        </h3>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1">Weight (kg)</label>

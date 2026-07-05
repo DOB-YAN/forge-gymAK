@@ -87,7 +87,10 @@ export default function TodayPage() {
 
       {/* Rest day */}
       {schedule.isRestDay && (
-        <div className="card text-center py-8">
+        <div className="text-center py-8 rounded-xl" style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6))',
+          border: '1px solid rgba(255,255,255,0.6)',
+        }}>
           <p className="text-3xl mb-2">😴</p>
           <p className="text-gray-500 font-medium">Rest Day</p>
           <p className="text-sm text-gray-400 mt-1">Take time to recover and grow</p>
@@ -98,8 +101,12 @@ export default function TodayPage() {
       {!schedule.isRestDay && !hasStarted && (
         <button
           onClick={handleStartPreset}
-          className="card w-full text-center py-6 cursor-pointer hover:shadow-md transition-all duration-200 active:scale-[0.99] group"
-          style={{ borderColor: colors.border }}
+          className="w-full text-center py-6 cursor-pointer transition-all duration-300 active:scale-[0.98] group"
+          style={{
+            background: `linear-gradient(135deg, ${colors.bg} 0%, rgba(255,255,255,0.8) 100%)`,
+            borderRadius: '12px',
+            border: `2px dashed ${colors.border}`,
+          }}
         >
           <p className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-200">💪</p>
           <p className="font-semibold" style={{ color: colors.primary }}>
@@ -130,7 +137,7 @@ export default function TodayPage() {
       {!schedule.isRestDay && hasStarted && (
         <button
           onClick={() => setShowAddModal(true)}
-          className="w-full py-3 rounded-xl border-2 border-dashed text-sm font-medium transition-all duration-200 hover:bg-gray-50 active:scale-[0.99]"
+          className="w-full py-3 rounded-xl border-2 border-dashed text-sm font-medium transition-all duration-200 hover:bg-white/60 active:scale-[0.98]"
           style={{ borderColor: colors.border, color: colors.primary }}
         >
           + Custom Exercise

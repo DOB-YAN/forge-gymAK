@@ -35,16 +35,15 @@ function AddExerciseForm({ dateKey, onClose }: AddExerciseFormProps) {
     { value: 'pyramid', label: 'Pyramid' },
   ];
 
-  return (
-    <form onSubmit={handleSubmit} className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3">
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Exercise name (e.g. Bench Press)"
-        className="input-field text-left text-sm"
-        autoFocus
-      />
+  return (            <form onSubmit={handleSubmit} className="mt-3 p-3 rounded-lg space-y-3" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4))' }}>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Exercise name (e.g. Bench Press)"
+                className="input-field text-left text-sm"
+                autoFocus
+              />
       <div className="flex gap-2 flex-wrap">
         {patterns.map((p) => (
           <button
@@ -80,12 +79,11 @@ function AddExerciseForm({ dateKey, onClose }: AddExerciseFormProps) {
           disabled={!name.trim()}
         >
           Add
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 text-gray-600 hover:bg-gray-300 transition-all"
-        >
+        </button>          <button
+            type="button"
+            onClick={onClose}
+            className="btn-secondary flex-1 text-sm"
+          >
           Cancel
         </button>
       </div>
@@ -119,7 +117,7 @@ export default function SchedulePage() {
         const isAdding = addingToDay === day.dayOfWeek;
 
         return (
-          <div key={day.dayOfWeek} className="card overflow-hidden">
+          <div key={day.dayOfWeek} className="card overflow-hidden animate-slideUp">
             <button
               onClick={() => setExpandedDay(isExpanded ? null : day.dayOfWeek)}
               className="w-full flex items-center justify-between"

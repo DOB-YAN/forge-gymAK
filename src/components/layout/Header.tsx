@@ -34,7 +34,9 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+    <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-white/60"
+      style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.7))' }}
+    >
       <div className="max-w-lg mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -44,8 +46,9 @@ export default function Header() {
           <div className="flex items-center gap-2 relative">
             <button
               onClick={() => setShowBackupMenu(!showBackupMenu)}
-              className="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center text-lg transition-all duration-200 active:scale-90"
+              className="w-9 h-9 rounded-lg hover:bg-white/60 flex items-center justify-center text-lg transition-all duration-200 active:scale-90"
               title="Backup / Restore data"
+              style={{ backgroundColor: showBackupMenu ? 'rgba(255,255,255,0.6)' : undefined }}
             >
               💾
             </button>

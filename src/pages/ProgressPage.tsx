@@ -154,16 +154,16 @@ export default function ProgressPage() {
       <h2 className="text-lg font-bold text-gray-800">Progress</h2>
 
       {/* View toggle */}
-      <div className="flex rounded-xl bg-gray-100 p-1 gap-1">
+      <div className="flex rounded-xl p-1 gap-1 border border-white/40" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3))' }}>
         {(['exercise', 'compare', 'muscle'] as ChartView[]).map((view) => (
           <button
             key={view}
             onClick={() => setChartView(view)}
-            className={`flex-1 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
-              chartView === view ? 'bg-white text-gray-800 shadow-sm scale-105' : 'text-gray-500 hover:text-gray-700'
+            className={`flex-1 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 ${
+              chartView === view ? 'bg-white/90 text-gray-800 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            {view === 'exercise' ? 'By Exercise' : view === 'compare' ? 'vs Abel & Keneni' : 'Muscle Groups'}
+            {view === 'exercise' ? 'By Exercise' : view === 'compare' ? 'Progress Comparison' : 'Muscle Groups'}
           </button>
         ))}
       </div>

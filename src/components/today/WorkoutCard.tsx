@@ -35,7 +35,7 @@ export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previous
   };
 
   return (
-    <div className="card mb-3 overflow-hidden">
+    <div className="card mb-3 overflow-hidden animate-slideUp" style={{ borderLeft: `3px solid ${colors.primary}` }}>
       {/* Header */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
@@ -52,12 +52,11 @@ export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previous
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); startTimer(2); }}
-            className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-all duration-200 active:scale-90"
-            title="Start rest timer"
-          >
+        <div className="flex items-center gap-2">            <button
+              onClick={(e) => { e.stopPropagation(); startTimer(2); }}
+              className="p-1.5 rounded-lg hover:bg-blue-50/80 text-gray-400 hover:text-blue-500 transition-all duration-200 active:scale-90"
+              title="Start rest timer"
+            >
             ⏱
           </button>
           {totalVolume > 0 && (

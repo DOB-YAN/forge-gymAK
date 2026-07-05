@@ -94,14 +94,14 @@ export default function HistoryPage() {
       <h2 className="text-lg font-bold text-gray-800">History</h2>
 
       {/* User filter */}
-      <div className="flex rounded-xl bg-gray-100 p-1 gap-1">
+      <div className="flex rounded-xl p-1 gap-1 border border-white/40" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3))' }}>
         {(['all', 'abel', 'keneni'] as const).map((user) => (
           <button
             key={user}
             onClick={() => setSelectedUser(user)}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
               selectedUser === user
-                ? 'bg-white text-gray-800 shadow-sm'
+                ? 'bg-white/90 text-gray-800 shadow-sm scale-[1.02]'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             style={{
@@ -116,14 +116,14 @@ export default function HistoryPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="card text-center">
+        <div className="stat-card">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Workouts</p>
           <p className="text-2xl font-bold mt-1" style={{ color: colors.primary }}>
             {totalWorkouts}
           </p>
           <p className="text-[10px] text-gray-400">Last 30 days</p>
         </div>
-        <div className="card text-center">
+        <div className="stat-card">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Volume</p>
           <p className="text-2xl font-bold mt-1" style={{ color: colors.primary }}>
             {totalVolume.toLocaleString()}
