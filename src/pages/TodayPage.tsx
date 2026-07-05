@@ -29,6 +29,12 @@ export default function TodayPage() {
   const todayWorkout = getDayWorkout(activeUser, dateKey);
   const lastWeekWorkout = getDayWorkout(activeUser, lastWeekKey);
 
+  // Compute next day's schedule
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowSchedule = getDaySchedule(tomorrow);
+  const tomorrowName = DAY_NAMES[tomorrow.getDay()];
+
   // Merge preset exercises with any custom ones logged
   const exercises = useMemo(() => {
     if (!todayWorkout?.exercises || todayWorkout.exercises.length === 0) {
@@ -76,7 +82,7 @@ export default function TodayPage() {
           {schedule.muscleGroups.map((mg) => (
             <span
               key={mg}
-              className="text-xs px-2 py-1 rounded-full font-medium"
+              className="text-xs px-2.5 py-1 rounded-full font-medium"
               style={{ backgroundColor: colors.bg, color: colors.primary }}
             >
               {mg}
@@ -87,13 +93,13 @@ export default function TodayPage() {
 
       {/* Rest day */}
       {schedule.isRestDay && (
-        <div className="text-center py-8 rounded-xl" style={{
+        <div className="text-center py-8 rounded-xl animate-scaleIn" style={{
           background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6))',
           border: '1px solid rgba(255,255,255,0.6)',
         }}>
           <p className="text-3xl mb-2">😴</p>
-          <p className="text-gray-500 font-medium">Rest Day</p>
-          <p className="text-sm text-gray-400 mt-1">Take time to recover and grow</p>
+          <p className="text-gray-500 font-semibold">Rest Day</p>
+          <p className="text-sm text-gray-400 mt-1">Recover and grow stronger 💪</p>
         </div>
       )}
 
@@ -101,14 +107,14 @@ export default function TodayPage() {
       {!schedule.isRestDay && !hasStarted && (
         <button
           onClick={handleStartPreset}
-          className="w-full text-center py-6 cursor-pointer transition-all duration-300 active:scale-[0.98] group"
+          className="w-full text-center py-6 cursor-pointer transition-all duration-300 active:scale-[0.98] group animate-scaleIn"
           style={{
             background: `linear-gradient(135deg, ${colors.bg} 0%, rgba(255,255,255,0.8) 100%)`,
             borderRadius: '12px',
             border: `2px dashed ${colors.border}`,
           }}
         >
-          <p className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-200">💪</p>
+          <p className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-300">💪</p>
           <p className="font-semibold" style={{ color: colors.primary }}>
             Start Today's Workout
           </p>
@@ -153,6 +159,79 @@ export default function TodayPage() {
         >
           {saved ? '✓ Workout Saved!' : 'Save Workout'}
         </button>
+      )}
+
+      {/* Coming Up Tomorrow */}
+      {!tomorrowSchedule.isRestDay && (
+        <div
+          className="rounded-xl p-4 transition-all duration-300 animate-slideUp"
+          style={{
+            background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">📋</span>
+              <h3 className="text-sm font-semibold text-white">Coming Up Tomorrow</h3>
+            </div>
+            <span className="text-xs font-medium text-amber-400">{tomorrowName}</span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {tomorrowSchedule.muscleGroups.map((mg) => (
+              <span
+                key={mg}
+                className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                style={{
+                  background: 'rgba(251,191,36,0.15)',
+                  color: '#fbbf24',
+                  border: '1px solid rgba(251,191,36,0.2)',
+                }}
+              >
+                {mg}
+              </span>
+            ))}
+          </div>
+
+          <div className="space-y-1">
+            {tomorrowSchedule.exercises.map((ex, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between py-1 px-2 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.05)' }}
+              >
+                <span className="text-sm text-gray-300">{ex.name}</span>
+                <span className="text-[10px] text-gray-500">{ex.defaultSets} sets</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 pt-2 border-t border-white/10">
+            <p className="text-[10px] text-gray-500 text-center">
+              Get ready — tomorrow's workout is waiting
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Coming Up Tomorrow - Rest Day variant */}
+      {tomorrowSchedule.isRestDay && (
+        <div
+          className="rounded-xl p-4 transition-all duration-300 animate-slideUp"
+          style={{
+            background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm">😴</span>
+            <h3 className="text-sm font-semibold text-white">Tomorrow is Rest Day</h3>
+          </div>
+          <p className="text-xs text-gray-400">
+            {tomorrowName} — take time to recover and come back stronger
+          </p>
+        </div>
       )}
 
       <AddExerciseModal

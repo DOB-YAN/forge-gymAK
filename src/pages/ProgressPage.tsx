@@ -163,7 +163,7 @@ export default function ProgressPage() {
               chartView === view ? 'bg-white/90 text-gray-800 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            {view === 'exercise' ? 'By Exercise' : view === 'compare' ? 'Progress Comparison' : 'Muscle Groups'}
+            {view === 'exercise' ? '📊 By Exercise' : view === 'compare' ? '👥 Progress Comparison' : '💪 Muscle Groups'}
           </button>
         ))}
       </div>
