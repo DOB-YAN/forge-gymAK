@@ -8,18 +8,18 @@ import { BodyProvider } from './context/BodyContext';
 import App from './App';
 import './index.css';
 
-// Restore original URL after GitHub Pages 404 redirect
+// Restore original URL after redirect (for GitHub Pages / Firebase)
 const redirect = sessionStorage.getItem("redirect");
 if (redirect) {
   sessionStorage.removeItem("redirect");
   const url = new URL(redirect);
-  if (url.pathname !== "/forge-gymAK/" && url.pathname !== "/forge-gymAK") {
-    window.history.replaceState(null, "", url.pathname + url.search);
+  if (url.pathname !== "/" && url.pathname !== "") {
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
   }
 }
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter basename="/forge-gymAK">
+    <BrowserRouter>
       <UserProvider>
         <WorkoutProvider>
           <TimerProvider>
