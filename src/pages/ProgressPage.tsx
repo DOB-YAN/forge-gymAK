@@ -16,15 +16,22 @@ type ChartView = 'exercise' | 'muscle' | 'compare';
 const ABEL_COLORS = USER_COLORS.abel;
 const KENENI_COLORS = USER_COLORS.keneni;
 
+const chartColors = {
+  grid: 'rgba(255,255,255,0.05)',
+  text: 'rgba(148,163,184,0.5)',
+  tooltip: { bg: 'rgba(22,22,40,0.95)', border: 'rgba(251,191,36,0.2)' },
+  weight: '#fbbf24',
+  reps: '#60a5fa',
+  volume: '#a78bfa',
+};
+
 export default function ProgressPage() {
   const { activeUser } = useUser();
-  const colors = USER_COLORS[activeUser];
   const { workoutData } = useWorkout();
   const [chartView, setChartView] = useState<ChartView>('exercise');
   const [selectedExercise, setSelectedExercise] = useState('');
   const [selectedDay, setSelectedDay] = useState('all');
 
-  // Get all unique exercises
   const allExercises = useMemo(() => {
     const set = new Set<string>();
     WEEKLY_SCHEDULE.forEach((day) => {
@@ -41,13 +48,11 @@ export default function ProgressPage() {
     return Array.from(set).sort();
   }, [workoutData]);
 
-  // Filter data by selected day
   const filterByDay = (dateKey: string) => {
     if (selectedDay === 'all') return true;
     return getDayName(dateKey) === selectedDay;
   };
 
-  // Single user progress data
   const progressData = useMemo(() => {
     if (!selectedExercise) return [];
     const userData = workoutData[activeUser];
@@ -72,7 +77,6 @@ export default function ProgressPage() {
     return data.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
   }, [selectedExercise, workoutData, activeUser, selectedDay]);
 
-  // Combined comparison data
   const comparisonData = useMemo(() => {
     if (!selectedExercise) return [];
     const getUserData = (userId: UserId) => {
@@ -118,7 +122,6 @@ export default function ProgressPage() {
     return Object.entries(merged).sort(([a], [b]) => a.localeCompare(b)).map(([_, val]) => val);
   }, [selectedExercise, workoutData, selectedDay]);
 
-  // Muscle group data
   const muscleData = useMemo(() => {
     const userData = workoutData[activeUser];
     if (!userData) return [];
@@ -138,9 +141,9 @@ export default function ProgressPage() {
   }, [workoutData, activeUser]);
 
   const metrics = [
-    { key: 'maxWeight', label: 'Max Weight (kg)', color: '#3B82F6' },
-    { key: 'totalReps', label: 'Total Reps', color: '#10B981' },
-    { key: 'volume', label: 'Volume (kg)', color: '#F59E0B' },
+    { key: 'maxWeight', label: 'Max Weight (kg)', color: chartColors.weight },
+    { key: 'totalReps', label: 'Total Reps', color: chartColors.reps },
+    { key: 'volume', label: 'Volume (kg)', color: chartColors.volume },
   ];
 
   const comparisonMetrics = [
@@ -151,71 +154,62 @@ export default function ProgressPage() {
 
   return (
     <div className="space-y-4 page-enter">
-      <h2 className="text-lg font-bold text-gray-800">Progress</h2>
+      <h2 className="section-title">Progress</h2>
 
       {/* View toggle */}
-      <div className="flex rounded-xl p-1 gap-1 border border-white/40" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3))' }}>
+      <div className="pill-group">
         {(['exercise', 'compare', 'muscle'] as ChartView[]).map((view) => (
           <button
             key={view}
             onClick={() => setChartView(view)}
-            className={`flex-1 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 ${
-              chartView === view ? 'bg-white/90 text-gray-800 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-700'
-            }`}
+            className={`pill-group-option ${chartView === view ? 'active' : ''}`}
           >
-            {view === 'exercise' ? '📊 By Exercise' : view === 'compare' ? '👥 Progress Comparison' : '💪 Muscle Groups'}
+            {view === 'exercise' ? '📊 By Exercise' : view === 'compare' ? '👥 Comparison' : '💪 Muscle Groups'}
           </button>
         ))}
       </div>
 
-      {/* Day of week selector (for exercise & compare views) */}
+      {/* Day & Exercise selectors */}
       {(chartView === 'exercise' || chartView === 'compare') && (
-        <div className="card">
-          <label className="block text-sm font-medium text-gray-500 mb-2">Day of Week</label>
-          <select
-            value={selectedDay}
-            onChange={(e) => setSelectedDay(e.target.value)}
-            className="input-field text-left"
-          >
-            <option value="all">All Days</option>
-            {WEEKLY_SCHEDULE.filter((d) => !d.isRestDay).map((day) => (
-              <option key={day.dayOfWeek} value={day.dayOfWeek}>{day.label}</option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div className="card">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(148,163,184,0.7)' }}>Day of Week</label>
+            <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} className="input-field text-left">
+              <option value="all">All Days</option>
+              {WEEKLY_SCHEDULE.filter((d) => !d.isRestDay).map((day) => (
+                <option key={day.dayOfWeek} value={day.dayOfWeek}>{day.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="card">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(148,163,184,0.7)' }}>Select Exercise</label>
+            <select
+              value={selectedExercise}
+              onChange={(e) => setSelectedExercise(e.target.value)}
+              className="input-field text-left"
+            >
+              <option value="">Choose an exercise...</option>
+              {allExercises.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
 
-      {/* Exercise selector (for exercise & compare views) */}
-      {(chartView === 'exercise' || chartView === 'compare') && (
-        <div className="card">
-          <label className="block text-sm font-medium text-gray-500 mb-2">Select Exercise</label>
-          <select
-            value={selectedExercise}
-            onChange={(e) => setSelectedExercise(e.target.value)}
-            className="input-field text-left"
-            style={{ borderColor: selectedExercise ? colors.border : undefined }}
-          >
-            <option value="">Choose an exercise...</option>
-            {allExercises.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Exercise View Charts */}
+      {/* Exercise Charts */}
       {chartView === 'exercise' && selectedExercise && progressData.length > 0 && (
         <div className="space-y-4">
           {metrics.map((metric) => (
-            <div key={metric.key} className="card hover:shadow-md transition-shadow duration-300">
-              <h3 className="text-sm font-semibold text-gray-500 mb-3">{metric.label}</h3>
+            <div key={metric.key} className="card">
+              <h3 className="text-sm font-semibold mb-3" style={{ color: metric.color }}>{metric.label}</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={progressData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                  <XAxis dataKey="display" tick={{ fontSize: 10, fill: '#9CA3AF' }} interval="preserveStartEnd" />
-                  <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', fontSize: '12px' }} />
-                  <Line type="monotone" dataKey={metric.key} stroke={metric.color} strokeWidth={2} dot={{ fill: metric.color, r: 4 }} activeDot={{ r: 6 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                  <XAxis dataKey="display" tick={{ fontSize: 10, fill: chartColors.text }} interval="preserveStartEnd" />
+                  <YAxis tick={{ fontSize: 10, fill: chartColors.text }} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: `1px solid ${chartColors.tooltip.border}`, fontSize: '12px', background: chartColors.tooltip.bg, color: '#e2e8f0' }} />
+                  <Line type="monotone" dataKey={metric.key} stroke={metric.color} strokeWidth={2.5} dot={{ fill: metric.color, r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -224,38 +218,38 @@ export default function ProgressPage() {
       )}
       {chartView === 'exercise' && selectedExercise && progressData.length === 0 && (
         <div className="card text-center py-8 animate-fadeIn">
-          <p className="text-gray-400">No data yet for this exercise.</p>
-          <p className="text-sm text-gray-300 mt-1">Log some workouts to see progress!</p>
+          <p style={{ color: 'rgba(148,163,184,0.6)' }}>No data yet for this exercise.</p>
+          <p className="text-sm mt-1" style={{ color: 'rgba(148,163,184,0.4)' }}>Log some workouts to see progress!</p>
         </div>
       )}
 
-      {/* Compare View Charts */}
+      {/* Comparison Charts */}
       {chartView === 'compare' && selectedExercise && comparisonData.length > 0 && (
         <div className="space-y-4">
           {comparisonMetrics.map(({ abelKey, keneniKey, label }) => (
-            <div key={abelKey} className="card hover:shadow-md transition-shadow duration-300">
-              <h3 className="text-sm font-semibold text-gray-500 mb-3">{label}</h3>
+            <div key={abelKey} className="card">
+              <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>{label}</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={comparisonData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                  <XAxis dataKey="display" tick={{ fontSize: 10, fill: '#9CA3AF' }} interval="preserveStartEnd" />
-                  <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', fontSize: '12px' }} />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                  <XAxis dataKey="display" tick={{ fontSize: 10, fill: chartColors.text }} interval="preserveStartEnd" />
+                  <YAxis tick={{ fontSize: 10, fill: chartColors.text }} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: `1px solid ${chartColors.tooltip.border}`, fontSize: '12px', background: chartColors.tooltip.bg, color: '#e2e8f0' }} />
+                  <Legend formatter={(value) => <span style={{ color: '#94a3b8' }}>{value}</span>} />
                   <Line type="monotone" dataKey={abelKey} stroke={ABEL_COLORS.primary} strokeWidth={2} dot={{ fill: ABEL_COLORS.primary, r: 4 }} name="Abel" />
                   <Line type="monotone" dataKey={keneniKey} stroke={KENENI_COLORS.primary} strokeWidth={2} dot={{ fill: KENENI_COLORS.primary, r: 4 }} name="Keneni" />
                 </LineChart>
               </ResponsiveContainer>
               <div className="grid grid-cols-2 gap-2 mt-3">
-                <div className="bg-blue-50 rounded-lg p-2 text-center">
-                  <p className="text-[10px] text-gray-400 uppercase font-medium">Abel Best</p>
-                  <p className="text-sm font-bold text-blue-600">
+                <div className="rounded-lg p-2 text-center" style={{ background: 'rgba(96,165,250,0.1)' }}>
+                  <p className="text-[10px] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>Abel Best</p>
+                  <p className="text-sm font-bold" style={{ color: '#60a5fa' }}>
                     {Math.max(...comparisonData.map((d) => Number(d[abelKey as keyof typeof d])), 0)}
                   </p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-2 text-center">
-                  <p className="text-[10px] text-gray-400 uppercase font-medium">Keneni Best</p>
-                  <p className="text-sm font-bold text-green-600">
+                <div className="rounded-lg p-2 text-center" style={{ background: 'rgba(74,222,128,0.1)' }}>
+                  <p className="text-[10px] uppercase font-medium" style={{ color: 'rgba(148,163,184,0.5)' }}>Keneni Best</p>
+                  <p className="text-sm font-bold" style={{ color: '#4ade80' }}>
                     {Math.max(...comparisonData.map((d) => Number(d[keneniKey as keyof typeof d])), 0)}
                   </p>
                 </div>
@@ -266,8 +260,8 @@ export default function ProgressPage() {
       )}
       {chartView === 'compare' && selectedExercise && comparisonData.length === 0 && (
         <div className="card text-center py-8 animate-fadeIn">
-          <p className="text-gray-400">No comparison data yet for this exercise.</p>
-          <p className="text-sm text-gray-300 mt-1">Both users need to log this exercise to see side-by-side progress!</p>
+          <p style={{ color: 'rgba(148,163,184,0.6)' }}>No comparison data yet for this exercise.</p>
+          <p className="text-sm mt-1" style={{ color: 'rgba(148,163,184,0.4)' }}>Both users need to log this exercise to see side-by-side progress!</p>
         </div>
       )}
 
@@ -275,38 +269,38 @@ export default function ProgressPage() {
       {chartView === 'muscle' && (
         <>
           {muscleData.length > 0 ? (
-            <div className="card hover:shadow-md transition-shadow duration-300">
-              <h3 className="text-sm font-semibold text-gray-500 mb-3">Total Volume by Muscle Group</h3>
+            <div className="card">
+              <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>Total Volume by Muscle Group</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={muscleData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                  <YAxis dataKey="muscleGroup" type="category" tick={{ fontSize: 11, fill: '#6B7280' }} width={90} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', fontSize: '12px' }} formatter={(value) => [`${Number(value).toLocaleString()} kg`, 'Volume']} />
-                  <Bar dataKey="volume" fill={colors.primary} radius={[0, 6, 6, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: chartColors.text }} />
+                  <YAxis dataKey="muscleGroup" type="category" tick={{ fontSize: 11, fill: 'rgba(148,163,184,0.6)' }} width={90} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: `1px solid ${chartColors.tooltip.border}`, fontSize: '12px', background: chartColors.tooltip.bg, color: '#e2e8f0' }} formatter={(value) => [`${Number(value).toLocaleString()} kg`, 'Volume']} />
+                  <Bar dataKey="volume" fill="#fbbf24" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           ) : (
             <div className="card text-center py-8 animate-fadeIn">
-              <p className="text-gray-400">No workout data yet.</p>
-              <p className="text-sm text-gray-300 mt-1">Log some workouts to see muscle group analysis!</p>
+              <p style={{ color: 'rgba(148,163,184,0.6)' }}>No workout data yet.</p>
+              <p className="text-sm mt-1" style={{ color: 'rgba(148,163,184,0.4)' }}>Log some workouts to see muscle group analysis!</p>
             </div>
           )}
           {muscleData.length > 0 && (
-            <div className="card hover:shadow-md transition-shadow duration-300">
-              <h3 className="text-sm font-semibold text-gray-500 mb-3">Breakdown</h3>
+            <div className="card">
+              <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>Breakdown</h3>
               <div className="space-y-2">
                 {muscleData.map((item, i) => {
                   const pct = (item.volume / muscleData[0].volume) * 100;
                   return (
                     <div key={item.muscleGroup} className="animate-slideUp" style={{ animationDelay: `${i * 50}ms` }}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="font-medium text-gray-700">{item.muscleGroup}</span>
-                        <span className="text-gray-400">{item.volume.toLocaleString()} kg</span>
+                        <span style={{ color: 'rgba(203,213,225,0.7)' }}>{item.muscleGroup}</span>
+                        <span style={{ color: 'rgba(148,163,184,0.5)' }}>{item.volume.toLocaleString()} kg</span>
                       </div>
-                      <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${pct}%`, backgroundColor: colors.primary }} />
+                      <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #fbbf24, #f59e0b)' }} />
                       </div>
                     </div>
                   );

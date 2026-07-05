@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { useUser } from '../context/UserContext';
 import { useWorkout } from '../context/WorkoutContext';
 import { USER_COLORS } from '../types';
 import type { UserId } from '../types';
@@ -12,12 +11,9 @@ import { calculateVolume } from '../utils/calculations';
 const DAYS_30 = 30;
 
 export default function HistoryPage() {
-  const { activeUser } = useUser();
-  const colors = USER_COLORS[activeUser];
   const { workoutData } = useWorkout();
   const [selectedUser, setSelectedUser] = useState<'all' | UserId>('all');
 
-  // Generate last 30 days
   const last30Days = useMemo(() => {
     const days: string[] = [];
     const today = new Date();
@@ -32,7 +28,6 @@ export default function HistoryPage() {
     return days;
   }, []);
 
-  // Get workouts for both users
   const historyEntries = useMemo(() => {
     const users: UserId[] = selectedUser === 'all' ? ['abel', 'keneni'] : [selectedUser];
     const entries: {
@@ -65,7 +60,6 @@ export default function HistoryPage() {
     return entries.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
   }, [selectedUser, workoutData, last30Days]);
 
-  // Volume trend data
   const volumeTrend = useMemo(() => {
     const trendMap: Record<string, { display: string; abelVolume: number; keneniVolume: number }> = {};
 
@@ -89,24 +83,21 @@ export default function HistoryPage() {
   const totalWorkouts = historyEntries.length;
   const totalVolume = historyEntries.reduce((sum, e) => sum + e.totalVolume, 0);
 
+  const chartColors = { grid: 'rgba(255,255,255,0.05)', text: 'rgba(148,163,184,0.5)', tooltip: { bg: 'rgba(22,22,40,0.95)', border: 'rgba(251,191,36,0.2)' } };
+
   return (
     <div className="space-y-4 page-enter">
-      <h2 className="text-lg font-bold text-gray-800">History</h2>
+      <h2 className="section-title">History</h2>
 
       {/* User filter */}
-      <div className="flex rounded-xl p-1 gap-1 border border-white/40" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3))' }}>
+      <div className="pill-group">
         {(['all', 'abel', 'keneni'] as const).map((user) => (
           <button
             key={user}
             onClick={() => setSelectedUser(user)}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-              selectedUser === user
-                ? 'bg-white/90 text-gray-800 shadow-sm scale-[1.02]'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
+            className={`pill-group-option ${selectedUser === user ? 'active' : ''}`}
             style={{
-              color: selectedUser === user && user !== 'all'
-                ? USER_COLORS[user].primary : undefined,
+              color: selectedUser === user && user !== 'all' ? (user === 'abel' ? '#60a5fa' : '#4ade80') : undefined,
             }}
           >
             {user === 'all' ? 'Both' : user.charAt(0).toUpperCase() + user.slice(1)}
@@ -117,17 +108,17 @@ export default function HistoryPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <div className="stat-card">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Workouts</p>
-          <p className="text-2xl font-bold mt-1" style={{ color: colors.primary }}>
+          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'rgba(148,163,184,0.5)' }}>Workouts</p>
+          <p className="text-2xl font-bold mt-1" style={{ color: '#fbbf24' }}>
             {totalWorkouts}
           </p>
-          <p className="text-[10px] text-gray-400">Last 30 days</p>
+          <p className="text-[10px] mt-1" style={{ color: 'rgba(148,163,184,0.4)' }}>Last 30 days</p>
         </div>
         <div className="stat-card">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Volume</p>
-          <p className="text-2xl font-bold mt-1" style={{ color: colors.primary }}>
+          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'rgba(148,163,184,0.5)' }}>Total Volume</p>
+          <p className="text-2xl font-bold mt-1" style={{ color: '#fbbf24' }}>
             {totalVolume.toLocaleString()}
-            <span className="text-sm text-gray-400 ml-1">kg</span>
+            <span className="text-sm ml-1" style={{ color: 'rgba(148,163,184,0.4)' }}>kg</span>
           </p>
         </div>
       </div>
@@ -135,16 +126,16 @@ export default function HistoryPage() {
       {/* Volume trend chart */}
       {volumeTrend.some((d) => d.abelVolume > 0 || d.keneniVolume > 0) && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-500 mb-3">Daily Volume Trend</h3>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>Daily Volume Trend</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={volumeTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-              <XAxis dataKey="display" tick={{ fontSize: 9, fill: '#9CA3AF' }} interval="preserveStartEnd" />
-              <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', fontSize: '12px' }} />
-              <Legend />
-              <Line type="monotone" dataKey="abelVolume" stroke={USER_COLORS.abel.primary} strokeWidth={2} dot={false} name="Abel" />
-              <Line type="monotone" dataKey="keneniVolume" stroke={USER_COLORS.keneni.primary} strokeWidth={2} dot={false} name="Keneni" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+              <XAxis dataKey="display" tick={{ fontSize: 9, fill: chartColors.text }} interval="preserveStartEnd" />
+              <YAxis tick={{ fontSize: 10, fill: chartColors.text }} />
+              <Tooltip contentStyle={{ borderRadius: '12px', border: `1px solid ${chartColors.tooltip.border}`, fontSize: '12px', background: chartColors.tooltip.bg, color: '#e2e8f0' }} />
+              <Legend formatter={(value) => <span style={{ color: '#94a3b8' }}>{value}</span>} />
+              <Line type="monotone" dataKey="abelVolume" stroke="#60a5fa" strokeWidth={2} dot={false} name="Abel" />
+              <Line type="monotone" dataKey="keneniVolume" stroke="#4ade80" strokeWidth={2} dot={false} name="Keneni" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -153,7 +144,7 @@ export default function HistoryPage() {
       {/* Daily entries */}
       {historyEntries.length > 0 ? (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-gray-500">Workout Log</h3>
+          <h3 className="text-sm font-semibold" style={{ color: 'rgba(148,163,184,0.7)' }}>Workout Log</h3>
           {historyEntries.map((entry, idx) => {
             const userColor = USER_COLORS[entry.userId];
             return (
@@ -161,34 +152,29 @@ export default function HistoryPage() {
                 <summary className="cursor-pointer list-none">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: userColor.primary }}
-                      />
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: userColor.primary }} />
                       <div>
-                        <p className="font-medium text-gray-800 text-sm">
-                          {entry.display}
-                        </p>
+                        <p className="font-medium text-sm" style={{ color: '#f1f5f9' }}>{entry.display}</p>
                         <p className="text-[10px] font-medium capitalize" style={{ color: userColor.primary }}>
                           {entry.userId}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold" style={{ color: userColor.primary }}>
+                      <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>
                         {entry.totalVolume.toLocaleString()} kg
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs" style={{ color: 'rgba(148,163,184,0.5)' }}>
                         {entry.exercises.length} exercises
                       </p>
                     </div>
                   </div>
                 </summary>
-                <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3">
+                <div className="mt-3 space-y-1.5 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                   {entry.exercises.map((ex, i) => (
                     <div key={i} className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">{ex.name}</span>
-                      <span className="text-gray-400">
+                      <span style={{ color: 'rgba(203,213,225,0.7)' }}>{ex.name}</span>
+                      <span style={{ color: 'rgba(148,163,184,0.5)' }}>
                         {ex.sets} sets · {ex.volume.toLocaleString()} kg
                       </span>
                     </div>
@@ -200,7 +186,7 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="card text-center py-8">
-          <p className="text-gray-400">No workouts logged in the last 30 days.</p>
+          <p style={{ color: 'rgba(148,163,184,0.6)' }}>No workouts logged in the last 30 days.</p>
         </div>
       )}
     </div>

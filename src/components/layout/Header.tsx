@@ -34,36 +34,58 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-white/60"
-      style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.7))' }}
+    <header
+      className="sticky top-0 z-40 border-b backdrop-blur-xl"
+      style={{
+        background: 'linear-gradient(135deg, rgba(15,15,26,0.92), rgba(22,22,40,0.85))',
+        borderColor: 'rgba(251,191,36,0.1)',
+      }}
     >
       <div className="max-w-lg mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-800">FORGE</h1>
-            <span className="text-sm text-gray-400 hidden xs:inline">Abel & Keneni</span>
+            <h1 className="text-xl font-bold" style={{ color: '#fbbf24' }}>FORGE</h1>
+            <span className="text-sm hidden xs:inline" style={{ color: 'rgba(148,163,184,0.7)' }}>
+              Abel & Keneni
+            </span>
           </div>
           <div className="flex items-center gap-2 relative">
             <button
               onClick={() => setShowBackupMenu(!showBackupMenu)}
-              className="w-9 h-9 rounded-lg hover:bg-white/60 flex items-center justify-center text-lg transition-all duration-200 active:scale-90"
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all duration-200 active:scale-90"
+              style={{
+                background: showBackupMenu ? 'rgba(251,191,36,0.1)' : 'transparent',
+                color: showBackupMenu ? '#fbbf24' : 'rgba(148,163,184,0.6)',
+              }}
               title="Backup / Restore data"
-              style={{ backgroundColor: showBackupMenu ? 'rgba(255,255,255,0.6)' : undefined }}
             >
               💾
             </button>
             {showBackupMenu && (
               <>
-                <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[160px] z-50">
+                <div
+                  className="absolute top-full right-0 mt-1 rounded-xl shadow-lg py-1 min-w-[160px] z-50"
+                  style={{
+                    background: 'rgba(22,22,40,0.95)',
+                    border: '1px solid rgba(251,191,36,0.15)',
+                    backdropFilter: 'blur(12px)',
+                  }}
+                >
                   <button
                     onClick={handleExport}
-                    className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-left flex items-center gap-2 transition-all"
+                    style={{ color: 'rgba(203,213,225,0.8)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     📤 Export data
                   </button>
                   <button
                     onClick={handleImportClick}
-                    className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-left flex items-center gap-2 transition-all"
+                    style={{ color: 'rgba(203,213,225,0.8)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     📥 Import data
                   </button>
@@ -73,7 +95,8 @@ export default function Header() {
             )}
             <button
               onClick={() => startTimer(2)}
-              className="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center text-lg transition-all duration-200 active:scale-90"
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all duration-200 active:scale-90 hover:bg-white/5"
+              style={{ color: 'rgba(148,163,184,0.6)' }}
               title="Rest timer"
             >
               ⏱

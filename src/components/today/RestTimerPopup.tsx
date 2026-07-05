@@ -22,13 +22,23 @@ export default function RestTimerPopup() {
   if (!activePreset && !isRunning) {
     return (
       <div className="fixed bottom-20 left-0 right-0 z-50 flex justify-center pointer-events-none">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-3 py-2 flex items-center gap-2 pointer-events-auto">
-          <span className="text-xs font-medium text-gray-400 mr-1">Rest</span>
+        <div
+          className="rounded-xl shadow-lg px-3 py-2 flex items-center gap-2 pointer-events-auto"
+          style={{
+            background: 'rgba(22,22,40,0.95)',
+            border: '1px solid rgba(251,191,36,0.15)',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <span className="text-xs font-medium mr-1" style={{ color: 'rgba(148,163,184,0.5)' }}>Rest</span>
           {presets.map((p) => (
             <button
               key={p}
               onClick={() => startTimer(p)}
-              className="w-9 h-9 rounded-lg text-xs font-bold text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-90"
+              className="w-9 h-9 rounded-lg text-xs font-bold transition-all duration-200 active:scale-90"
+              style={{ color: 'rgba(203,213,225,0.7)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.12)'; e.currentTarget.style.color = '#fbbf24'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(203,213,225,0.7)'; }}
             >
               {p}m
             </button>
@@ -42,7 +52,11 @@ export default function RestTimerPopup() {
     return (
       <button
         onClick={restoreTimer}
-        className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-xl hover:shadow-xl transition-all duration-200 active:scale-90"
+        className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl transition-all duration-200 active:scale-90"
+        style={{
+          background: 'rgba(22,22,40,0.95)',
+          border: '1px solid rgba(251,191,36,0.2)',
+        }}
       >
         ⏱️
       </button>
@@ -50,14 +64,23 @@ export default function RestTimerPopup() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 w-72 mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+      <div
+        className="rounded-2xl shadow-xl p-6 w-72 mx-4"
+        style={{
+          background: 'linear-gradient(135deg, rgba(22,22,40,0.98), rgba(30,30,50,0.95))',
+          border: '1px solid rgba(251,191,36,0.15)',
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-500">Rest Timer</h3>
+          <h3 className="text-sm font-semibold" style={{ color: 'rgba(203,213,225,0.8)' }}>Rest Timer</h3>
           <div className="flex gap-1">
             <button
               onClick={minimizeTimer}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ color: 'rgba(148,163,184,0.5)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -65,7 +88,10 @@ export default function RestTimerPopup() {
             </button>
             <button
               onClick={stopTimer}
-              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ color: 'rgba(239,68,68,0.5)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -77,20 +103,23 @@ export default function RestTimerPopup() {
         {/* Timer circle */}
         <div className="relative w-32 h-32 mx-auto mb-4">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128">
-            <circle cx="64" cy="64" r="56" fill="none" stroke="#E5E7EB" strokeWidth="6" />
+            <circle cx="64" cy="64" r="56" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
             <circle
               cx="64" cy="64" r="56"
               fill="none"
-              stroke={remainingSeconds > 10 ? '#3B82F6' : '#EF4444'}
+              stroke={remainingSeconds > 10 ? '#fbbf24' : '#ef4444'}
               strokeWidth="6"
               strokeDasharray={`${2 * Math.PI * 56}`}
               strokeDashoffset={`${2 * Math.PI * 56 * (1 - progress / 100)}`}
               strokeLinecap="round"
               className="transition-all duration-1000 ease-linear"
+              style={{ filter: remainingSeconds > 10 ? 'drop-shadow(0 0 6px rgba(251,191,36,0.4))' : 'drop-shadow(0 0 6px rgba(239,68,68,0.4))' }}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-3xl font-bold ${remainingSeconds > 10 ? 'text-gray-800' : 'text-red-500 animate-pulse'}`}>
+            <span className={`text-3xl font-bold ${remainingSeconds > 10 ? '' : 'animate-pulse'}`}
+              style={{ color: remainingSeconds > 10 ? '#f1f5f9' : '#ef4444' }}
+            >
               {formatTime(remainingSeconds)}
             </span>
           </div>
@@ -102,11 +131,12 @@ export default function RestTimerPopup() {
             <button
               key={p}
               onClick={() => startTimer(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
-                ${activePreset === p
-                  ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-300'
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
+              style={{
+                background: activePreset === p ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)',
+                color: activePreset === p ? '#fbbf24' : 'rgba(148,163,184,0.6)',
+                border: activePreset === p ? '1px solid rgba(251,191,36,0.3)' : '1px solid transparent',
+              }}
             >
               {p}m
             </button>
@@ -118,14 +148,21 @@ export default function RestTimerPopup() {
           {isRunning ? (
             <button
               onClick={pauseTimer}
-              className="px-8 py-2.5 rounded-xl font-semibold text-sm bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all duration-200 active:scale-95"
+              className="px-8 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95"
+              style={{
+                background: 'rgba(245,158,11,0.12)',
+                color: '#fbbf24',
+                border: '1px solid rgba(251,191,36,0.2)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(251,191,36,0.18)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(245,158,11,0.12)'}
             >
               Pause
             </button>
           ) : (
             <button
               onClick={resumeTimer}
-              className="px-8 py-2.5 rounded-xl font-semibold text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all duration-200 active:scale-95"
+              className="btn-primary px-8 py-2.5"
             >
               Resume
             </button>

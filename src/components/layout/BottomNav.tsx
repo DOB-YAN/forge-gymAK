@@ -1,6 +1,4 @@
 import { NavLink } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
-import { USER_COLORS } from '../../types';
 
 const tabs = [
   { to: '/', label: 'Today', icon: '🏋️' },
@@ -11,14 +9,12 @@ const tabs = [
 ];
 
 export default function BottomNav() {
-  const { activeUser } = useUser();
-  const activeColor = USER_COLORS[activeUser].primary;
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 safe-area-bottom z-50"
+    <nav
+      className="fixed bottom-0 left-0 right-0 safe-area-bottom z-50"
       style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.85))',
-        borderTop: '1px solid rgba(255,255,255,0.6)',
+        background: 'linear-gradient(135deg, rgba(15,15,26,0.95), rgba(22,22,40,0.9))',
+        borderTop: '1px solid rgba(251,191,36,0.08)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
       }}
@@ -31,11 +27,11 @@ export default function BottomNav() {
             end={tab.to === '/'}
             className={({ isActive }: { isActive: boolean }) => `
               flex flex-col items-center justify-center px-3 py-1 rounded-lg min-w-0
-              transition-all duration-200
-              ${isActive ? 'scale-105' : 'opacity-60 hover:opacity-80'}
+              transition-all duration-200 relative
+              ${isActive ? 'scale-105' : 'opacity-50 hover:opacity-75'}
             `}
             style={({ isActive }: { isActive: boolean }) => ({
-              color: isActive ? activeColor : '#6B7280',
+              color: isActive ? '#fbbf24' : 'rgba(148,163,184,0.5)',
             })}
           >
             <span className="text-xl">{tab.icon}</span>
