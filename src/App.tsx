@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
-import UserSelector, { getStoredUser, storeUser } from './components/UserSelector';
+import UserSelector from './components/UserSelector';
 import { useUser } from './context/UserContext';
 import type { UserId } from './types';
 
@@ -26,24 +26,13 @@ function PageLoader() {
 function AppContent() {
   const { setActiveUser } = useUser();
   const [showSelector, setShowSelector] = useState(true);
-  const [initialized, setInitialized] = useState(false);
-
-  useEffect(() => {
-    const stored = getStoredUser();
-    if (stored) {
-      setActiveUser(stored);
-      setShowSelector(false);
-    }
-    setInitialized(true);
-  }, [setActiveUser]);
 
   const handleSelect = (user: UserId) => {
-    storeUser(user);
     setActiveUser(user);
     setShowSelector(false);
   };
 
-  if (!initialized || showSelector) {
+  if (showSelector) {
     return <UserSelector onSelect={handleSelect} />;
   }
 

@@ -11,41 +11,16 @@ function formatTime(seconds: number): string {
 
 export default function RestTimerPopup() {
   const {
-    isRunning, isMinimized, remainingSeconds, totalSeconds,
-    activePreset, startTimer, pauseTimer, resumeTimer, stopTimer,
+    activePreset, isRunning, isMinimized, remainingSeconds, totalSeconds,
+    startTimer, pauseTimer, resumeTimer, stopTimer,
     minimizeTimer, restoreTimer,
   } = useTimer();
 
   const progress = totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
 
-  // Quick start buttons (shown when timer is not running)
+  // Nothing shown when no timer is active — use the header clock button to start
   if (!activePreset && !isRunning) {
-    return (
-      <div className="fixed bottom-20 left-0 right-0 z-50 flex justify-center pointer-events-none">
-        <div
-          className="rounded-xl shadow-lg px-3 py-2 flex items-center gap-2 pointer-events-auto"
-          style={{
-            background: 'rgba(22,22,40,0.95)',
-            border: '1px solid rgba(251,191,36,0.15)',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <span className="text-xs font-medium mr-1" style={{ color: 'rgba(148,163,184,0.5)' }}>Rest</span>
-          {presets.map((p) => (
-            <button
-              key={p}
-              onClick={() => startTimer(p)}
-              className="w-9 h-9 rounded-lg text-xs font-bold transition-all duration-200 active:scale-90"
-              style={{ color: 'rgba(203,213,225,0.7)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.12)'; e.currentTarget.style.color = '#fbbf24'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(203,213,225,0.7)'; }}
-            >
-              {p}m
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (isMinimized) {

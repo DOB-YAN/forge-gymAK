@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useWorkout } from '../context/WorkoutContext';
-import { useUser } from '../context/UserContext';
 import { WEEKLY_SCHEDULE } from '../data/schedule';
 import type { ExercisePattern } from '../types';
 
@@ -10,7 +9,6 @@ interface AddExerciseFormProps {
 }
 
 function AddExerciseForm({ dateKey, onClose }: AddExerciseFormProps) {
-  const { activeUser } = useUser();
   const { addExercise } = useWorkout();
   const [name, setName] = useState('');
   const [pattern, setPattern] = useState<ExercisePattern>('normal');
@@ -19,7 +17,9 @@ function AddExerciseForm({ dateKey, onClose }: AddExerciseFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    addExercise(activeUser, dateKey, name.trim(), pattern, numSets);
+    // Add exercise to BOTH users so the schedule is shared
+    addExercise('abel', dateKey, name.trim(), pattern, numSets);
+    addExercise('keneni', dateKey, name.trim(), pattern, numSets);
     setName('');
     setPattern('normal');
     setNumSets(4);

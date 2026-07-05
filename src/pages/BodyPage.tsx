@@ -21,7 +21,12 @@ export default function BodyPage() {
   const [saved, setSaved] = useState(false);
   const [logForUser, setLogForUser] = useState<UserId>(activeUser);
 
-  const allMetrics = getAllMetrics(activeUser);
+  // Get metrics for the SELECTED logForUser, not activeUser
+  const selectedMetrics = getAllMetrics(logForUser);
+
+  const latestSelected = selectedMetrics.length > 0
+    ? selectedMetrics.reduce((a, b) => a.dateKey > b.dateKey ? a : b)
+    : null;
 
   const chartData = useMemo(() => {
     if (showBoth) {
@@ -40,7 +45,8 @@ export default function BodyPage() {
         };
       });
     }
-    return allMetrics
+    // Show metrics for the selected logForUser when not showing both
+    return selectedMetrics
       .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
       .map((m) => ({
         display: formatDisplayDate(m.dateKey),
@@ -51,11 +57,9 @@ export default function BodyPage() {
         keneniWeight: null as number | null,
         keneniHeight: null as number | null,
       }));
-  }, [allMetrics, showBoth, getAllMetrics]);
+  }, [selectedMetrics, showBoth, getAllMetrics]);
 
-  const latestMetrics = allMetrics.length > 0
-    ? allMetrics.reduce((a, b) => a.dateKey > b.dateKey ? a : b)
-    : null;
+  const latestMetrics = latestSelected;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +89,7 @@ export default function BodyPage() {
   };
 
   const userMetrics = useMemo(() => {
-    const userIds: UserId[] = showBoth ? ['abel', 'keneni'] : [activeUser];
+    const userIds: UserId[] = showBoth ? ['abel', 'keneni'] : [logForUser];
     const entries: { userId: UserId; dateKey: string; display: string; weightKg: number; heightCm: number }[] = [];
     for (const uid of userIds) {
       const metrics = getAllMetrics(uid);
@@ -100,7 +104,7 @@ export default function BodyPage() {
       });
     }
     return entries.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
-  }, [activeUser, showBoth, getAllMetrics]);
+  }, [logForUser, showBoth, getAllMetrics]);
 
   return (
     <div className="space-y-4 page-enter">

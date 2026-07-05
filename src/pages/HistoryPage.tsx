@@ -3,6 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { useWorkout } from '../context/WorkoutContext';
+import { useBody } from '../context/BodyContext';
 import { USER_COLORS } from '../types';
 import type { UserId } from '../types';
 import { formatDisplayDate } from '../utils/dates';
@@ -12,6 +13,7 @@ const DAYS_30 = 30;
 
 export default function HistoryPage() {
   const { workoutData } = useWorkout();
+  const { getAllMetrics } = useBody();
   const [selectedUser, setSelectedUser] = useState<'all' | UserId>('all');
 
   const last30Days = useMemo(() => {
@@ -140,6 +142,43 @@ export default function HistoryPage() {
           </ResponsiveContainer>
         </div>
       )}
+
+      {/* Body measurements */}
+      <div className="card">
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>Body Measurements</h3>
+        <div className="space-y-2">
+          {(['abel', 'keneni'] as UserId[]).map((uid) => {
+            const metrics = getAllMetrics(uid);
+            if (metrics.length === 0) return null;
+            const sorted = [...metrics].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+            const latest = sorted[0];
+            const userColor = USER_COLORS[uid];
+            return (
+              <div key={uid} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: userColor.primary }} />
+                  <span className="text-sm font-medium capitalize" style={{ color: '#f1f5f9' }}>{uid}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <span className="text-xs" style={{ color: 'rgba(148,163,184,0.5)' }}>Weight </span>
+                    <span className="text-sm font-semibold" style={{ color: '#fbbf24' }}>{latest.weightKg} kg</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs" style={{ color: 'rgba(148,163,184,0.5)' }}>Height </span>
+                    <span className="text-sm font-semibold" style={{ color: '#60a5fa' }}>{latest.heightCm} cm</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {(['abel', 'keneni'] as UserId[]).every((uid) => getAllMetrics(uid).length === 0) && (
+            <p className="text-sm text-center py-3" style={{ color: 'rgba(148,163,184,0.6)' }}>
+              No body measurements logged yet. Go to Body page to add them.
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Daily entries */}
       {historyEntries.length > 0 ? (
