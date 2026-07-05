@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/forge-gymAK/sw.js', { scope: '/forge-gymAK/' })})}
