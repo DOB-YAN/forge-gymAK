@@ -8,6 +8,15 @@ import { BodyProvider } from './context/BodyContext';
 import App from './App';
 import './index.css';
 
+// Restore original URL after GitHub Pages 404 redirect
+const redirect = sessionStorage.getItem("redirect");
+if (redirect) {
+  sessionStorage.removeItem("redirect");
+  const url = new URL(redirect);
+  if (url.pathname !== "/forge-gymAK/" && url.pathname !== "/forge-gymAK") {
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }
+}
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename="/forge-gymAK">
