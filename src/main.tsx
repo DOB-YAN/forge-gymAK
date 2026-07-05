@@ -10,7 +10,7 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter basename="/forge-gym">
+    <BrowserRouter basename="/forge-gymAK">
       <UserProvider>
         <WorkoutProvider>
           <TimerProvider>

@@ -14,7 +14,7 @@ export default function SettingsPage() {
 
   const handleExport = () => {
     const data = exportAllData();
-    const filename = `forge-gym-backup-${new Date().toISOString().split('T')[0]}.json`;
+    const filename = `forge-gymAK-backup-${new Date().toISOString().split('T')[0]}.json`;
     downloadJsonFile(data, filename);
   };
 

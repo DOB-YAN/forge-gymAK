@@ -31,5 +31,5 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/forge-gym/',
+  base: '/forge-gymAK/',
 });

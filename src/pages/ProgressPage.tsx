@@ -6,7 +6,7 @@ import {
 import { useUser } from '../context/UserContext';
 import { useWorkout } from '../context/WorkoutContext';
 import { USER_COLORS } from '../types';
-import type { UserId, ExerciseLog } from '../types';
+import type { UserId } from '../types';
 import { WEEKLY_SCHEDULE } from '../data/schedule';
 import { calculateVolume, EXERCISE_MUSCLE_MAP } from '../utils/calculations';
 import { formatDisplayDate } from '../utils/dates';

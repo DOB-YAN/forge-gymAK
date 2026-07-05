@@ -43,7 +43,7 @@ function getDatabaseInstance() {
   return db;
 }
 
-const WORKOUT_PATH = 'forge-gym/workouts';
+const WORKOUT_PATH = 'forge-gymAK/workouts';
 
 export async function saveWorkoutToFirebase(
   userId: UserId,

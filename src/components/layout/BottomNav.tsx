@@ -22,12 +22,12 @@ export default function BottomNav() {
             key={tab.to}
             to={tab.to}
             end={tab.to === '/'}
-            className={({ isActive }) => `
+            className={({ isActive }: { isActive: boolean }) => `
               flex flex-col items-center justify-center px-3 py-1 rounded-lg min-w-0
               transition-all duration-200
               ${isActive ? 'scale-105' : 'opacity-60 hover:opacity-80'}
             `}
-            style={({ isActive }) => ({
+            style={({ isActive }: { isActive: boolean }) => ({
               color: isActive ? activeColor : '#6B7280',
             })}
           >
