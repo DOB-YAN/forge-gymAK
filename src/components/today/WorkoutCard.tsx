@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUser } from '../../context/UserContext';
 import { useWorkout } from '../../context/WorkoutContext';
+import { useTimer } from '../../context/TimerContext';
 import { USER_COLORS } from '../../types';
 import type { ExerciseLog } from '../../types';
 import SetRow from './SetRow';
@@ -16,6 +17,7 @@ export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previous
   const { activeUser } = useUser();
   const colors = USER_COLORS[activeUser];
   const { updateSet, addSet, removeSet } = useWorkout();
+  const { startTimer } = useTimer();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const totalVolume = exercise.sets.reduce((sum, s) => sum + s.weightKg * s.reps, 0);
@@ -51,6 +53,13 @@ export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previous
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); startTimer(2); }}
+            className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-all duration-200 active:scale-90"
+            title="Start rest timer"
+          >
+            ⏱
+          </button>
           {totalVolume > 0 && (
             <span className="text-xs text-gray-400 font-medium">
               {totalVolume} kg

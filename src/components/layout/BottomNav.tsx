@@ -3,11 +3,11 @@ import { useUser } from '../../context/UserContext';
 import { USER_COLORS } from '../../types';
 
 const tabs = [
-  { to: '/', label: 'Today', icon: '📋' },
+  { to: '/', label: 'Today', icon: '🏋️' },
+  { to: '/schedule', label: 'Schedule', icon: '📋' },
+  { to: '/history', label: 'History', icon: '📅' },
   { to: '/progress', label: 'Progress', icon: '📈' },
   { to: '/body', label: 'Body', icon: '⚖️' },
-  { to: '/history', label: 'History', icon: '📅' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export default function BottomNav() {

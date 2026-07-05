@@ -3,10 +3,10 @@ import { Routes, Route } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
 
 const TodayPage = lazy(() => import('./pages/TodayPage'));
+const SchedulePage = lazy(() => import('./pages/SchedulePage'));
+const HistoryPage = lazy(() => import('./pages/HistoryPage'));
 const ProgressPage = lazy(() => import('./pages/ProgressPage'));
 const BodyPage = lazy(() => import('./pages/BodyPage'));
-const HistoryPage = lazy(() => import('./pages/HistoryPage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 function PageLoader() {
   return (
@@ -28,6 +28,16 @@ export default function App() {
             <TodayPage />
           </Suspense>
         } />
+        <Route path="schedule" element={
+          <Suspense fallback={<PageLoader />}>
+            <SchedulePage />
+          </Suspense>
+        } />
+        <Route path="history" element={
+          <Suspense fallback={<PageLoader />}>
+            <HistoryPage />
+          </Suspense>
+        } />
         <Route path="progress" element={
           <Suspense fallback={<PageLoader />}>
             <ProgressPage />
@@ -36,16 +46,6 @@ export default function App() {
         <Route path="body" element={
           <Suspense fallback={<PageLoader />}>
             <BodyPage />
-          </Suspense>
-        } />
-        <Route path="history" element={
-          <Suspense fallback={<PageLoader />}>
-            <HistoryPage />
-          </Suspense>
-        } />
-        <Route path="settings" element={
-          <Suspense fallback={<PageLoader />}>
-            <SettingsPage />
           </Suspense>
         } />
       </Route>

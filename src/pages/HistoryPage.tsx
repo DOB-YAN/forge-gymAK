@@ -1,203 +1,198 @@
 import { useState, useMemo } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { useUser } from '../context/UserContext';
 import { useWorkout } from '../context/WorkoutContext';
 import { USER_COLORS } from '../types';
-import { getDaySchedule } from '../data/schedule';
-import { formatDisplayDate, getMonthDateKeys } from '../utils/dates';
+import type { UserId } from '../types';
+import { formatDisplayDate } from '../utils/dates';
 import { calculateVolume } from '../utils/calculations';
+
+const DAYS_30 = 30;
 
 export default function HistoryPage() {
   const { activeUser } = useUser();
   const colors = USER_COLORS[activeUser];
   const { workoutData } = useWorkout();
+  const [selectedUser, setSelectedUser] = useState<'all' | UserId>('all');
 
-  const today = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
-  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+  // Generate last 30 days
+  const last30Days = useMemo(() => {
+    const days: string[] = [];
+    const today = new Date();
+    for (let i = DAYS_30 - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      days.push(`${y}-${m}-${d}`);
+    }
+    return days;
+  }, []);
 
-  // Get all date keys for the month
-  const monthDateKeys = useMemo(
-    () => getMonthDateKeys(selectedYear, selectedMonth),
-    [selectedYear, selectedMonth]
-  );
+  // Get workouts for both users
+  const historyEntries = useMemo(() => {
+    const users: UserId[] = selectedUser === 'all' ? ['abel', 'keneni'] : [selectedUser];
+    const entries: {
+      dateKey: string;
+      display: string;
+      userId: UserId;
+      exercises: { name: string; volume: number; sets: number }[];
+      totalVolume: number;
+    }[] = [];
 
-  // Get workouts for the month
-  const monthWorkouts = useMemo(() => {
-    const userData = workoutData[activeUser];
-    if (!userData) return [];
+    for (const dateKey of last30Days) {
+      for (const userId of users) {
+        const day = workoutData[userId]?.[dateKey];
+        if (!day?.exercises?.length) continue;
 
-    return monthDateKeys
-      .map((dateKey) => {
-        const day = userData[dateKey];
-        if (!day) return null;
-        return { dateKey, day };
-      })
-      .filter(Boolean) as { dateKey: string; day: NonNullable<typeof userData[string]> }[];
-  }, [workoutData, activeUser, monthDateKeys]);
+        entries.push({
+          dateKey,
+          display: formatDisplayDate(dateKey),
+          userId,
+          exercises: day.exercises.map((e) => ({
+            name: e.exerciseName,
+            volume: calculateVolume(e),
+            sets: e.sets.length,
+          })),
+          totalVolume: day.exercises.reduce((sum, e) => sum + calculateVolume(e), 0),
+        });
+      }
+    }
 
-  // Daily volume trend
+    return entries.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+  }, [selectedUser, workoutData, last30Days]);
+
+  // Volume trend data
   const volumeTrend = useMemo(() => {
-    return monthWorkouts.map(({ dateKey, day }) => {
-      const totalVolume = day.exercises?.reduce((sum, e) => sum + calculateVolume(e), 0) ?? 0;
-      return {
-        display: formatDisplayDate(dateKey),
-        volume: totalVolume,
-        exerciseCount: day.exercises?.length ?? 0,
+    const trendMap: Record<string, { display: string; abelVolume: number; keneniVolume: number }> = {};
+
+    for (const dateKey of last30Days) {
+      const display = formatDisplayDate(dateKey);
+      const abelDay = workoutData['abel']?.[dateKey];
+      const keneniDay = workoutData['keneni']?.[dateKey];
+
+      trendMap[dateKey] = {
+        display,
+        abelVolume: abelDay?.exercises?.reduce((sum, e) => sum + calculateVolume(e), 0) ?? 0,
+        keneniVolume: keneniDay?.exercises?.reduce((sum, e) => sum + calculateVolume(e), 0) ?? 0,
       };
-    });
-  }, [monthWorkouts]);
-
-  const monthlyTotalVolume = volumeTrend.reduce((sum, d) => sum + d.volume, 0);
-
-  // Month picker
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-
-  const goToPrevMonth = () => {
-    if (selectedMonth === 0) {
-      setSelectedMonth(11);
-      setSelectedYear((y) => y - 1);
-    } else {
-      setSelectedMonth((m) => m - 1);
     }
-  };
 
-  const goToNextMonth = () => {
-    if (selectedMonth === 11) {
-      setSelectedMonth(0);
-      setSelectedYear((y) => y + 1);
-    } else {
-      setSelectedMonth((m) => m + 1);
-    }
-  };
+    return Object.entries(trendMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([_, val]) => val);
+  }, [workoutData, last30Days]);
+
+  const totalWorkouts = historyEntries.length;
+  const totalVolume = historyEntries.reduce((sum, e) => sum + e.totalVolume, 0);
 
   return (
     <div className="space-y-4 page-enter">
       <h2 className="text-lg font-bold text-gray-800">History</h2>
 
-      {/* Month selector */}
-      <div className="flex items-center justify-between card">
-        <button
-          onClick={goToPrevMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <span className="font-semibold text-gray-700">
-          {months[selectedMonth]} {selectedYear}
-        </span>
-        <button
-          onClick={goToNextMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+      {/* User filter */}
+      <div className="flex rounded-xl bg-gray-100 p-1 gap-1">
+        {(['all', 'abel', 'keneni'] as const).map((user) => (
+          <button
+            key={user}
+            onClick={() => setSelectedUser(user)}
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+              selectedUser === user
+                ? 'bg-white text-gray-800 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            style={{
+              color: selectedUser === user && user !== 'all'
+                ? USER_COLORS[user].primary : undefined,
+            }}
+          >
+            {user === 'all' ? 'Both' : user.charAt(0).toUpperCase() + user.slice(1)}
+          </button>
+        ))}
       </div>
 
-      {/* Monthly stats */}
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <div className="card text-center">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Workouts</p>
           <p className="text-2xl font-bold mt-1" style={{ color: colors.primary }}>
-            {monthWorkouts.length}
+            {totalWorkouts}
           </p>
+          <p className="text-[10px] text-gray-400">Last 30 days</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Volume</p>
           <p className="text-2xl font-bold mt-1" style={{ color: colors.primary }}>
-            {monthlyTotalVolume.toLocaleString()}
+            {totalVolume.toLocaleString()}
             <span className="text-sm text-gray-400 ml-1">kg</span>
           </p>
         </div>
       </div>
 
       {/* Volume trend chart */}
-      {volumeTrend.length >= 2 ? (
+      {volumeTrend.some((d) => d.abelVolume > 0 || d.keneniVolume > 0) && (
         <div className="card">
           <h3 className="text-sm font-semibold text-gray-500 mb-3">Daily Volume Trend</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={volumeTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-              <XAxis
-                dataKey="display"
-                tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                interval="preserveStartEnd"
-              />
+              <XAxis dataKey="display" tick={{ fontSize: 9, fill: '#9CA3AF' }} interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: '12px',
-                  border: '1px solid #E5E7EB',
-                  fontSize: '12px',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="volume"
-                stroke={colors.primary}
-                strokeWidth={2}
-                dot={{ fill: colors.primary, r: 3 }}
-                activeDot={{ r: 5 }}
-                name="Volume (kg)"
-              />
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', fontSize: '12px' }} />
+              <Legend />
+              <Line type="monotone" dataKey="abelVolume" stroke={USER_COLORS.abel.primary} strokeWidth={2} dot={false} name="Abel" />
+              <Line type="monotone" dataKey="keneniVolume" stroke={USER_COLORS.keneni.primary} strokeWidth={2} dot={false} name="Keneni" />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      ) : (
-        <div className="card text-center py-8">
-          <p className="text-gray-400">Not enough data for trends this month.</p>
-        </div>
       )}
 
-      {/* Daily summaries */}
-      {monthWorkouts.length > 0 ? (
+      {/* Daily entries */}
+      {historyEntries.length > 0 ? (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-gray-500">Daily Summaries</h3>
-          {monthWorkouts.map(({ dateKey, day }) => {
-            const schedule = getDaySchedule(new Date(dateKey));
+          <h3 className="text-sm font-semibold text-gray-500">Workout Log</h3>
+          {historyEntries.map((entry, idx) => {
+            const userColor = USER_COLORS[entry.userId];
             return (
-              <details key={dateKey} className="card group">
+              <details key={`${entry.dateKey}-${entry.userId}-${idx}`} className="card group">
                 <summary className="cursor-pointer list-none">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-800 text-sm">
-                        {formatDisplayDate(dateKey)}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {schedule.label} — {schedule.muscleGroups.join(', ')}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: userColor.primary }}
+                      />
+                      <div>
+                        <p className="font-medium text-gray-800 text-sm">
+                          {entry.display}
+                        </p>
+                        <p className="text-[10px] font-medium capitalize" style={{ color: userColor.primary }}>
+                          {entry.userId}
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold" style={{ color: colors.primary }}>
-                        {day.exercises?.reduce((sum, e) => sum + calculateVolume(e), 0).toLocaleString()} kg
+                      <p className="text-sm font-semibold" style={{ color: userColor.primary }}>
+                        {entry.totalVolume.toLocaleString()} kg
                       </p>
                       <p className="text-xs text-gray-400">
-                        {day.exercises?.length ?? 0} exercises
+                        {entry.exercises.length} exercises
                       </p>
                     </div>
                   </div>
                 </summary>
-                <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
-                  {day.exercises?.map((exercise, i) => {
-                    const volume = calculateVolume(exercise);
-                    return (
-                      <div key={i} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">{exercise.exerciseName}</span>
-                        <span className="text-gray-400">
-                          {exercise.sets.length} sets · {volume.toLocaleString()} kg
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3">
+                  {entry.exercises.map((ex, i) => (
+                    <div key={i} className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">{ex.name}</span>
+                      <span className="text-gray-400">
+                        {ex.sets} sets · {ex.volume.toLocaleString()} kg
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </details>
             );
@@ -205,7 +200,7 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="card text-center py-8">
-          <p className="text-gray-400">No workouts logged this month yet.</p>
+          <p className="text-gray-400">No workouts logged in the last 30 days.</p>
         </div>
       )}
     </div>

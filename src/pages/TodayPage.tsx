@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useUser } from '../context/UserContext';
 import { useWorkout } from '../context/WorkoutContext';
 import { USER_COLORS } from '../types';
@@ -18,6 +18,7 @@ export default function TodayPage() {
   const colors = USER_COLORS[activeUser];
   const { getDayWorkout, addExercise } = useWorkout();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const today = new Date();
   const dateKey = formatDateKey(today);
@@ -55,6 +56,11 @@ export default function TodayPage() {
   };
 
   const hasStarted = todayWorkout?.exercises && todayWorkout.exercises.length > 0;
+
+  const handleSaveWorkout = useCallback(() => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }, []);
 
   return (
     <div className="space-y-4 page-enter">
@@ -128,6 +134,17 @@ export default function TodayPage() {
           style={{ borderColor: colors.border, color: colors.primary }}
         >
           + Custom Exercise
+        </button>
+      )}
+
+      {/* Save Workout button */}
+      {!schedule.isRestDay && hasStarted && (
+        <button
+          onClick={handleSaveWorkout}
+          className="btn-primary w-full py-3 text-base"
+          style={{ backgroundColor: colors.primary }}
+        >
+          {saved ? '✓ Workout Saved!' : 'Save Workout'}
         </button>
       )}
 
