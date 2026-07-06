@@ -35,15 +35,16 @@ export default function TodayPage() {
   const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const todayDayOfWeek = daysOfWeek[today.getDay()];
 
-  // Auto-initialize the day's workout on mount (once)
+  // Auto-initialize the day's workout on mount (once) — even on rest days so you can add exercises
   useEffect(() => {
-    if (schedule.isRestDay) return;
     const exercisesToAdd = schedule.exercises.map((e) => ({
       exerciseName: e.name,
       pattern: e.pattern,
       numSets: e.defaultSets,
     }));
-    ensureDayExists(activeUser, dateKey, exercisesToAdd);
+    if (exercisesToAdd.length > 0) {
+      ensureDayExists(activeUser, dateKey, exercisesToAdd);
+    }
     // Only run when user or date changes — NOT on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeUser, dateKey]);
@@ -82,8 +83,8 @@ export default function TodayPage() {
         </p>
       </div>
 
-      {/* Rest day */}
-      {schedule.isRestDay && (
+      {/* Rest day notice — shown when it's a rest day AND no custom exercises were added */}
+      {schedule.isRestDay && exercises.length === 0 && (
         <div
           className="rounded-xl p-6 text-center animate-scaleIn"
           style={{
@@ -99,8 +100,8 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* Exercise cards — directly from todayWorkout, always editable */}
-      {!schedule.isRestDay && (
+      {/* Exercise cards — shown on any day (including rest days if you added exercises) */}
+      {exercises.length > 0 && (
         <div className="space-y-3">
           {exercises.map((exercise, i) => (
             <WorkoutCard
@@ -114,24 +115,57 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* Add custom exercise button */}
-      {!schedule.isRestDay && hasStarted && (
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="w-full py-3 rounded-xl border-2 border-dashed text-sm font-medium transition-all duration-200 active:scale-[0.98]"
-          style={{
-            borderColor: 'rgba(251,191,36,0.15)',
-            color: 'rgba(251,191,36,0.7)',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.3)'; e.currentTarget.style.background = 'rgba(251,191,36,0.05)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.15)'; e.currentTarget.style.background = 'transparent'; }}
-        >
-          + Custom Exercise
-        </button>
+      {/* Add custom exercise button — always show if there are exercises or it's a rest day */}
+      {(hasStarted || schedule.isRestDay) && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex-1 py-3 rounded-xl border-2 border-dashed text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+            style={{
+              borderColor: 'rgba(251,191,36,0.15)',
+              color: 'rgba(251,191,36,0.7)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.3)'; e.currentTarget.style.background = 'rgba(251,191,36,0.05)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.15)'; e.currentTarget.style.background = 'transparent'; }}
+          >
+            + Custom Exercise
+          </button>
+          {hasStarted && (
+            <button
+              onClick={() => {
+                if (window.confirm('Clear all exercises from today\'s workout?')) {
+                  // Clear from context + localStorage
+                  const key = 'forge_gym_workout_data';
+                  try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                      const data = JSON.parse(raw);
+                      if (data[activeUser]?.[dateKey]) {
+                        delete data[activeUser][dateKey];
+                        localStorage.setItem(key, JSON.stringify(data));
+                        window.location.reload();
+                      }
+                    }
+                  } catch {}
+                }
+              }}
+              className="py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+              style={{
+                background: 'rgba(239,68,68,0.1)',
+                color: 'rgba(239,68,68,0.7)',
+                border: '1px solid rgba(239,68,68,0.2)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.18)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
       )}
 
       {/* Auto-save indicator */}
-      {!schedule.isRestDay && hasStarted && (
+      {hasStarted && (
         <div className="text-center pt-1">
           <span className="text-[10px] font-medium" style={{ color: 'rgba(148,163,184,0.4)' }}>
             ✓ Auto-saving after every entry
