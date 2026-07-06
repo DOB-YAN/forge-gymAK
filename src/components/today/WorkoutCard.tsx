@@ -12,9 +12,13 @@ interface WorkoutCardProps {
   dateKey: string;
   previousExercise?: ExerciseLog;
   onDelete?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
-export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previousExercise, onDelete }: WorkoutCardProps) {
+export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previousExercise, onDelete, onMoveUp, onMoveDown, isFirst, isLast }: WorkoutCardProps) {
   const { activeUser } = useUser();
   const colors = USER_COLORS[activeUser];
   const { updateSet, addSet, removeSet } = useWorkout();
@@ -53,6 +57,34 @@ export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previous
           )}
         </div>
         <div className="flex items-center gap-2">
+          {onMoveUp && !isFirst && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+              className="p-1.5 rounded-lg transition-all duration-200 active:scale-90"
+              style={{ color: 'rgba(148,163,184,0.4)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; e.currentTarget.style.color = '#fbbf24'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(148,163,184,0.4)'; }}
+              title="Move up"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+          )}
+          {onMoveDown && !isLast && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+              className="p-1.5 rounded-lg transition-all duration-200 active:scale-90"
+              style={{ color: 'rgba(148,163,184,0.4)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; e.currentTarget.style.color = '#fbbf24'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(148,163,184,0.4)'; }}
+              title="Move down"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); startTimer(2); }}
             className="p-1.5 rounded-lg transition-all duration-200 active:scale-90"

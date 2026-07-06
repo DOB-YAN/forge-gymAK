@@ -28,6 +28,7 @@ interface WorkoutContextType {
   removeSet: (userId: UserId, dateKey: string, exerciseIndex: number, setIndex: number) => void;
   deleteExercise: (dayOfWeek: string, exerciseIndex: number) => void;
   deleteExerciseFromDay: (userId: UserId, dateKey: string, exerciseIndex: number) => void;
+  moveExercise: (userId: UserId, dateKey: string, fromIndex: number, toIndex: number) => void;
   toggleCompleted: (userId: UserId, dateKey: string) => void;
   importData: (data: WorkoutData) => void;
   exportData: () => WorkoutData;
@@ -137,6 +138,22 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       const day = newData[userId]?.[dateKey];
       if (!day?.exercises[exerciseIndex]) return prev;
       day.exercises.splice(exerciseIndex, 1);
+      syncToFirebase(userId, dateKey, day);
+      return newData;
+    });
+  }, [syncToFirebase]);
+
+  const moveExercise = useCallback((userId: UserId, dateKey: string, fromIndex: number, toIndex: number) => {
+    setWorkoutData((prev) => {
+      const newData = structuredClone(prev);
+      const day = newData[userId]?.[dateKey];
+      if (!day?.exercises[fromIndex] || !day?.exercises[toIndex]) return prev;
+      
+      // Remove exercise from old position
+      const [movedExercise] = day.exercises.splice(fromIndex, 1);
+      // Insert at new position
+      day.exercises.splice(toIndex, 0, movedExercise);
+      
       syncToFirebase(userId, dateKey, day);
       return newData;
     });
@@ -395,6 +412,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       removeSet,
       deleteExercise,
       deleteExerciseFromDay,
+      moveExercise,
       toggleCompleted,
       importData,
       exportData,

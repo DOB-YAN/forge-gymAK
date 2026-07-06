@@ -14,7 +14,7 @@ const DAY_NAMES = [
 
 export default function TodayPage() {
   const { activeUser } = useUser();
-  const { getDayWorkout, updateDayExercises, deletedExercises, deleteExerciseFromDay } = useWorkout();
+  const { getDayWorkout, updateDayExercises, deletedExercises, deleteExerciseFromDay, moveExercise } = useWorkout();
   const { getScheduleForDay } = useSchedule();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -126,6 +126,10 @@ export default function TodayPage() {
               dateKey={dateKey}
               previousExercise={lastWeekWorkout?.exercises[exerciseIndices[i]]}
               onDelete={() => deleteExerciseFromDay(activeUser, dateKey, exerciseIndices[i])}
+              onMoveUp={() => moveExercise(activeUser, dateKey, exerciseIndices[i], exerciseIndices[i - 1])}
+              onMoveDown={() => moveExercise(activeUser, dateKey, exerciseIndices[i], exerciseIndices[i + 1])}
+              isFirst={i === 0}
+              isLast={i === exercises.length - 1}
             />
           ))}
         </div>
