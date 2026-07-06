@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useUser } from '../../context/UserContext';
 import { useWorkout } from '../../context/WorkoutContext';
-import { USER_COLORS } from '../../types';
 import type { ExercisePattern } from '../../types';
 
 interface AddExerciseModalProps {
@@ -19,7 +18,6 @@ const patterns: { value: ExercisePattern; label: string }[] = [
 
 export default function AddExerciseModal({ isOpen, onClose, dateKey }: AddExerciseModalProps) {
   const { activeUser } = useUser();
-  const colors = USER_COLORS[activeUser];
   const { addExercise } = useWorkout();
 
   const [exerciseName, setExerciseName] = useState('');
@@ -39,11 +37,28 @@ export default function AddExerciseModal({ isOpen, onClose, dateKey }: AddExerci
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40">
-      <div className="w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-6 animate-slide-up">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 animate-slideUp mx-auto"
+        style={{
+          background: 'linear-gradient(135deg, rgba(22,22,40,0.98), rgba(30,30,50,0.95))',
+          border: '1px solid rgba(251,191,36,0.15)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-800">Add Exercise</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+          <h3 className="text-lg font-bold" style={{ color: '#f1f5f9' }}>Add Exercise</h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg transition-all"
+            style={{ color: 'rgba(148,163,184,0.5)' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -52,7 +67,7 @@ export default function AddExerciseModal({ isOpen, onClose, dateKey }: AddExerci
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Exercise Name</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'rgba(148,163,184,0.6)' }}>Exercise Name</label>
             <input
               type="text"
               value={exerciseName}
@@ -64,20 +79,18 @@ export default function AddExerciseModal({ isOpen, onClose, dateKey }: AddExerci
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Pattern</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'rgba(148,163,184,0.6)' }}>Pattern</label>
             <div className="grid grid-cols-2 gap-2">
               {patterns.map((p) => (
                 <button
                   key={p.value}
                   type="button"
                   onClick={() => setPattern(p.value)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                    ${pattern === p.value
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
                   style={{
-                    backgroundColor: pattern === p.value ? colors.primary : undefined,
+                    background: pattern === p.value ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)',
+                    color: pattern === p.value ? '#fbbf24' : 'rgba(148,163,184,0.6)',
+                    border: pattern === p.value ? '1px solid rgba(251,191,36,0.3)' : '1px solid transparent',
                   }}
                 >
                   {p.label}
@@ -87,28 +100,27 @@ export default function AddExerciseModal({ isOpen, onClose, dateKey }: AddExerci
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Sets: <span className="font-bold" style={{ color: colors.primary }}>{numSets}</span>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'rgba(148,163,184,0.6)' }}>
+              Sets: <span className="font-bold" style={{ color: '#fbbf24' }}>{numSets}</span>
             </label>
             <input
               type="range"
               min={1}
-              max={6}
+              max={10}
               value={numSets}
               onChange={(e) => setNumSets(parseInt(e.target.value))}
-              className="w-full accent-blue-500"
-              style={{ accentColor: colors.primary }}
+              className="w-full"
+              style={{ accentColor: '#fbbf24' }}
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <div className="flex justify-between text-xs mt-1" style={{ color: 'rgba(148,163,184,0.4)' }}>
               <span>1</span>
-              <span>6</span>
+              <span>10</span>
             </div>
           </div>
 
           <button
             type="submit"
             className="btn-primary w-full"
-            style={{ backgroundColor: colors.primary }}
             disabled={!exerciseName.trim()}
           >
             Add Exercise

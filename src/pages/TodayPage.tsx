@@ -1,12 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useWorkout } from '../context/WorkoutContext';
-import { USER_COLORS } from '../types';
 import { getDaySchedule } from '../data/schedule';
 import { formatDateKey, getLastWeekDateKey } from '../utils/dates';
 import WorkoutCard from '../components/today/WorkoutCard';
 import AddExerciseModal from '../components/today/AddExerciseModal';
-
 
 const DAY_NAMES = [
   'Sunday', 'Monday', 'Tuesday', 'Wednesday',
@@ -15,10 +13,8 @@ const DAY_NAMES = [
 
 export default function TodayPage() {
   const { activeUser } = useUser();
-  const colors = USER_COLORS[activeUser];
-  const { getDayWorkout, addExercise } = useWorkout();
+  const { getDayWorkout, ensureDayExists, deletedExercises } = useWorkout();
   const [showAddModal, setShowAddModal] = useState(false);
-
 
   const today = new Date();
   const dateKey = formatDateKey(today);
@@ -35,31 +31,28 @@ export default function TodayPage() {
   const tomorrowSchedule = getDaySchedule(tomorrow);
   const tomorrowName = DAY_NAMES[tomorrow.getDay()];
 
-  // Merge preset exercises with any custom ones logged
-  const exercises = useMemo(() => {
-    if (!todayWorkout?.exercises || todayWorkout.exercises.length === 0) {
-      return schedule.exercises.map((e) => ({
-        exerciseName: e.name,
-        pattern: e.pattern,
-        sets: Array.from({ length: e.defaultSets }, () => ({
-          weightKg: 0,
-          reps: 0,
-          timestamp: Date.now(),
-        })),
-      }));
-    }
-    return todayWorkout.exercises;
-  }, [todayWorkout, schedule]);
+  // Determine the dayOfWeek for today to filter deleted exercises
+  const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const todayDayOfWeek = daysOfWeek[today.getDay()];
 
-  const handleStartPreset = () => {
-    if (!todayWorkout || todayWorkout.exercises.length === 0) {
-      schedule.exercises.forEach((e) => {
-        addExercise(activeUser, dateKey, e.name, e.pattern, e.defaultSets);
-      });
-    }
-  };
+  // Auto-initialize the day's workout on mount (once)
+  useEffect(() => {
+    if (schedule.isRestDay) return;
+    const exercisesToAdd = schedule.exercises.map((e) => ({
+      exerciseName: e.name,
+      pattern: e.pattern,
+      numSets: e.defaultSets,
+    }));
+    ensureDayExists(activeUser, dateKey, exercisesToAdd);
+    // Only run when user or date changes — NOT on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeUser, dateKey]);
 
-  const hasStarted = todayWorkout?.exercises && todayWorkout.exercises.length > 0;
+  // After ensureDayExists runs, todayWorkout will be populated with the synced exercises
+  // Filter out exercises that were deleted from the shared schedule
+  const deletedIndices: number[] = deletedExercises[todayDayOfWeek] ?? [];
+  const exercises = (todayWorkout?.exercises ?? []).filter((_, i) => !deletedIndices.includes(i));
+  const hasStarted = (todayWorkout?.exercises?.length ?? 0) > 0;
 
   return (
     <div className="space-y-4 page-enter">
@@ -106,28 +99,7 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* Start workout prompt */}
-      {!schedule.isRestDay && !hasStarted && (
-        <button
-          onClick={handleStartPreset}
-          className="w-full text-center py-6 cursor-pointer transition-all duration-300 active:scale-[0.98] group animate-scaleIn"
-          style={{
-            background: `linear-gradient(135deg, ${colors.bg}20, rgba(255,255,255,0.03))`,
-            borderRadius: '12px',
-            border: `2px dashed rgba(251,191,36,0.2)`,
-          }}
-        >
-          <p className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-300">💪</p>
-          <p className="font-semibold text-lg" style={{ color: '#fbbf24' }}>
-            Start Today's Workout
-          </p>
-          <p className="text-sm mt-1" style={{ color: 'rgba(148,163,184,0.6)' }}>
-            {schedule.exercises.length} exercises ready
-          </p>
-        </button>
-      )}
-
-      {/* Exercise cards */}
+      {/* Exercise cards — directly from todayWorkout, always editable */}
       {!schedule.isRestDay && (
         <div className="space-y-3">
           {exercises.map((exercise, i) => (
