@@ -12,13 +12,51 @@ function formatTime(seconds: number): string {
 export default function RestTimerPopup() {
   const {
     activePreset, isRunning, isMinimized, remainingSeconds, totalSeconds,
+    justFinished, setJustFinished,
     startTimer, pauseTimer, resumeTimer, stopTimer,
     minimizeTimer, restoreTimer,
   } = useTimer();
 
   const progress = totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
 
-  // Nothing shown when no timer is active — use the header clock button to start
+  // Timer complete overlay
+  if (justFinished) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+        <div
+          className="rounded-2xl shadow-xl p-8 w-80 mx-4 text-center animate-scaleIn"
+          style={{
+            background: 'linear-gradient(135deg, rgba(22,22,40,0.98), rgba(30,30,50,0.95))',
+            border: '1px solid rgba(251,191,36,0.25)',
+          }}
+        >
+          <div className="text-5xl mb-4 animate-pulse">⏰</div>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: '#fbbf24' }}>
+            Timer Complete!
+          </h2>
+          <p className="text-sm mb-6" style={{ color: 'rgba(148,163,184,0.6)' }}>
+            Rest is over — time to crush your next set!
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => { stopTimer(); }}
+              className="btn-primary px-6 py-2.5"
+            >
+              Dismiss
+            </button>
+            <button
+              onClick={() => { setJustFinished(false); startTimer(activePreset ?? 2); }}
+              className="btn-secondary px-6 py-2.5"
+            >
+              Restart
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Nothing shown when no timer is active
   if (!activePreset && !isRunning) {
     return null;
   }

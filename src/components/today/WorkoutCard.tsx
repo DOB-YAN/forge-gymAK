@@ -105,7 +105,7 @@ export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previous
           </div>
 
           {/* Add set button */}
-          {exercise.sets.length < 6 && (
+          {exercise.sets.length < 10 && (
             <button
               onClick={handleAddSet}
               className="w-full mt-2 py-2 rounded-xl border-2 border-dashed text-sm font-medium transition-all duration-200 active:scale-[0.98]"

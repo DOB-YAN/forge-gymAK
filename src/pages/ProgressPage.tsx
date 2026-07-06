@@ -31,6 +31,7 @@ export default function ProgressPage() {
   const [chartView, setChartView] = useState<ChartView>('exercise');
   const [selectedExercise, setSelectedExercise] = useState('');
   const [selectedDay, setSelectedDay] = useState('all');
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState('');
 
   const allExercises = useMemo(() => {
     const set = new Set<string>();
@@ -139,6 +140,33 @@ export default function ProgressPage() {
       .map(([muscleGroup, volume]) => ({ muscleGroup, volume }))
       .sort((a, b) => b.volume - a.volume);
   }, [workoutData, activeUser]);
+
+  // Per-muscle-group volume over time
+  const muscleVolumeOverTime = useMemo(() => {
+    const userData = workoutData[activeUser];
+    if (!userData || !selectedMuscleGroup) return [];
+    const dayVolumes: { dateKey: string; display: string; volume: number }[] = [];
+    Object.entries(userData).forEach(([dateKey, day]) => {
+      let dayVolume = 0;
+      day?.exercises?.forEach((exercise) => {
+        const volume = calculateVolume(exercise);
+        const groups = EXERCISE_MUSCLE_MAP[exercise.exerciseName] ?? ['Other'];
+        if (groups.includes(selectedMuscleGroup)) {
+          dayVolume += volume;
+        }
+      });
+      if (dayVolume > 0) {
+        dayVolumes.push({ dateKey, display: formatDisplayDate(dateKey), volume: dayVolume });
+      }
+    });
+    return dayVolumes.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+  }, [workoutData, activeUser, selectedMuscleGroup]);
+
+  const allMuscleGroups = useMemo(() => {
+    const set = new Set<string>();
+    Object.values(EXERCISE_MUSCLE_MAP).forEach((groups) => groups.forEach((g) => set.add(g)));
+    return Array.from(set).sort();
+  }, []);
 
   const metrics = [
     { key: 'maxWeight', label: 'Max Weight (kg)', color: chartColors.weight },
@@ -268,6 +296,59 @@ export default function ProgressPage() {
       {/* Muscle Group View */}
       {chartView === 'muscle' && (
         <>
+          {/* Muscle group selector */}
+          <div className="card">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(148,163,184,0.7)' }}>
+              Select Muscle Group for Trend
+            </label>
+            <select
+              value={selectedMuscleGroup}
+              onChange={(e) => setSelectedMuscleGroup(e.target.value)}
+              className="input-field text-left"
+            >
+              <option value="">All groups (overview below)...</option>
+              {allMuscleGroups.map((group) => (
+                <option key={group} value={group}>{group}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Per-muscle-group volume over time chart */}
+          {selectedMuscleGroup && muscleVolumeOverTime.length >= 2 && (
+            <div className="card">
+              <h3 className="text-sm font-semibold mb-3" style={{ color: '#fbbf24' }}>
+                {selectedMuscleGroup} Volume Over Time
+              </h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={muscleVolumeOverTime}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                  <XAxis dataKey="display" tick={{ fontSize: 10, fill: chartColors.text }} interval="preserveStartEnd" />
+                  <YAxis tick={{ fontSize: 10, fill: chartColors.text }} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: `1px solid ${chartColors.tooltip.border}`, fontSize: '12px', background: chartColors.tooltip.bg, color: '#e2e8f0' }} formatter={(value) => [`${Number(value).toLocaleString()} kg`, 'Volume']} />
+                  <Line type="monotone" dataKey="volume" stroke="#fbbf24" strokeWidth={2.5} dot={{ fill: '#fbbf24', r: 4 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          {selectedMuscleGroup && muscleVolumeOverTime.length === 0 && (
+            <div className="card text-center py-6 animate-fadeIn">
+              <p style={{ color: 'rgba(148,163,184,0.6)' }}>
+                No data yet for {selectedMuscleGroup}.
+              </p>
+              <p className="text-sm mt-1" style={{ color: 'rgba(148,163,184,0.4)' }}>
+                Log exercises targeting this muscle group to see the trend!
+              </p>
+            </div>
+          )}
+          {selectedMuscleGroup && muscleVolumeOverTime.length === 1 && (
+            <div className="card text-center py-6 animate-fadeIn">
+              <p style={{ color: 'rgba(148,163,184,0.6)' }}>
+                1 session logged for {selectedMuscleGroup}. Log more to see trends!
+              </p>
+            </div>
+          )}
+
+          {/* Total volume overview */}
           {muscleData.length > 0 ? (
             <div className="card">
               <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>Total Volume by Muscle Group</h3>
@@ -289,7 +370,7 @@ export default function ProgressPage() {
           )}
           {muscleData.length > 0 && (
             <div className="card">
-              <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>Breakdown</h3>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: 'rgba(203,213,225,0.8)' }}>Volume Breakdown</h3>
               <div className="space-y-2">
                 {muscleData.map((item, i) => {
                   const pct = (item.volume / muscleData[0].volume) * 100;

@@ -7,6 +7,8 @@ interface TimerContextType {
   remainingSeconds: number;
   totalSeconds: number;
   activePreset: RestTimerPreset | null;
+  justFinished: boolean;
+  setJustFinished: (v: boolean) => void;
   startTimer: (minutes: RestTimerPreset) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
@@ -23,28 +25,29 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [activePreset, setActivePreset] = useState<RestTimerPreset | null>(null);
+  const [justFinished, setJustFinished] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  const playChord = useCallback(() => {
+  const playAlarm = useCallback(() => {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new AudioContext();
       }
       const ctx = audioContextRef.current;
-      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-      notes.forEach((freq, i) => {
+      // Loud, distinct alarm — 3 rapid beeps
+      for (let i = 0; i < 3; i++) {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        gain.gain.value = 0.3;
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+        osc.type = 'square';
+        osc.frequency.value = 880;
+        gain.gain.value = 0.4;
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6 + i * 0.4);
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + i * 0.15);
-        osc.stop(ctx.currentTime + 2);
-      });
+        osc.start(ctx.currentTime + i * 0.4);
+        osc.stop(ctx.currentTime + 0.5 + i * 0.4);
+      }
     } catch {}
   }, []);
 
@@ -69,13 +72,14 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         if (prev <= 1) {
           clearTimer();
           setIsRunning(false);
-          playChord();
+          playAlarm();
+          setJustFinished(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-  }, [clearTimer, playChord]);
+  }, [clearTimer, playAlarm]);
 
   const pauseTimer = useCallback(() => {
     clearTimer();
@@ -90,13 +94,14 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         if (prev <= 1) {
           clearTimer();
           setIsRunning(false);
-          playChord();
+          playAlarm();
+          setJustFinished(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-  }, [remainingSeconds, clearTimer, playChord]);
+  }, [remainingSeconds, clearTimer, playAlarm]);
 
   const stopTimer = useCallback(() => {
     clearTimer();
@@ -105,6 +110,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setTotalSeconds(0);
     setActivePreset(null);
     setIsMinimized(false);
+    setJustFinished(false);
   }, [clearTimer]);
 
   const minimizeTimer = useCallback(() => setIsMinimized(true), []);
@@ -113,7 +119,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   return (
     <TimerContext.Provider value={{
       isRunning, isMinimized, remainingSeconds, totalSeconds, activePreset,
-      startTimer, pauseTimer, resumeTimer, stopTimer, minimizeTimer, restoreTimer,
+      startTimer, pauseTimer, resumeTimer, stopTimer, minimizeTimer, restoreTimer, justFinished, setJustFinished,
     }}>
       {children}
     </TimerContext.Provider>
