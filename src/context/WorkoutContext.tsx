@@ -21,6 +21,7 @@ interface WorkoutContextType {
   deletedExercises: Record<string, number[]>;
   getDayWorkout: (userId: UserId, dateKey: string) => DayWorkout | undefined;
   ensureDayExists: (userId: UserId, dateKey: string, exercises: { exerciseName: string; pattern: ExercisePattern; numSets: number }[]) => void;
+  updateDayExercises: (userId: UserId, dateKey: string, exercises: { exerciseName: string; pattern: ExercisePattern; numSets: number }[]) => void;
   addExercise: (userId: UserId, dateKey: string, exerciseName: string, pattern: ExercisePattern, numSets: number) => void;
   updateSet: (userId: UserId, dateKey: string, exerciseIndex: number, setIndex: number, weightKg: number, reps: number) => void;
   addSet: (userId: UserId, dateKey: string, exerciseIndex: number) => void;
@@ -191,6 +192,61 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     });
   }, [syncToFirebase]);
 
+  const updateDayExercises = useCallback((
+    userId: UserId,
+    dateKey: string,
+    exercises: { exerciseName: string; pattern: ExercisePattern; numSets: number }[]
+  ): void => {
+    setWorkoutData((prev) => {
+      const newData = structuredClone(prev);
+      if (!newData[userId]) newData[userId] = {};
+      
+      const existingDay = newData[userId][dateKey];
+      const newExercises: ExerciseLog[] = exercises.map((ex) => {
+        // Try to preserve existing set data if exercise name matches
+        const existingExercise = existingDay?.exercises?.find(
+          (e) => e.exerciseName === ex.exerciseName
+        );
+        
+        if (existingExercise) {
+          // Preserve existing sets, adjust if needed
+          const preservedSets = existingExercise.sets.slice(0, ex.numSets);
+          const missingSets = Math.max(0, ex.numSets - preservedSets.length);
+          const newSets = Array.from({ length: missingSets }, () => ({
+            weightKg: 0,
+            reps: 0,
+            timestamp: Date.now(),
+          }));
+          return {
+            exerciseName: ex.exerciseName,
+            pattern: ex.pattern,
+            sets: [...preservedSets, ...newSets],
+          };
+        }
+        
+        // Create new exercise
+        return {
+          exerciseName: ex.exerciseName,
+          pattern: ex.pattern,
+          sets: Array.from({ length: ex.numSets }, () => ({
+            weightKg: 0,
+            reps: 0,
+            timestamp: Date.now(),
+          })),
+        };
+      });
+
+      newData[userId][dateKey] = {
+        dayOfWeek: getDayOfWeekFromDateKey(dateKey),
+        exercises: newExercises,
+        completed: existingDay?.completed ?? false,
+      };
+      
+      syncToFirebase(userId, dateKey, newData[userId][dateKey]);
+      return newData;
+    });
+  }, [syncToFirebase]);
+
   const addExercise = useCallback((
     userId: UserId,
     dateKey: string,
@@ -332,6 +388,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       deletedExercises,
       getDayWorkout,
       ensureDayExists,
+      updateDayExercises,
       addExercise,
       updateSet,
       addSet,

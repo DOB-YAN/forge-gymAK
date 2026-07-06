@@ -14,7 +14,7 @@ const DAY_NAMES = [
 
 export default function TodayPage() {
   const { activeUser } = useUser();
-  const { getDayWorkout, ensureDayExists, deletedExercises, deleteExerciseFromDay } = useWorkout();
+  const { getDayWorkout, ensureDayExists, updateDayExercises, deletedExercises, deleteExerciseFromDay } = useWorkout();
   const { getScheduleForDay } = useSchedule();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -59,7 +59,18 @@ export default function TodayPage() {
     }
     // Only run when user or date changes — NOT on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeUser, dateKey, schedule.exercises]);
+  }, [activeUser, dateKey]);
+
+  // Update exercises when schedule changes (preserves existing set data)
+  useEffect(() => {
+    const exercisesToUpdate = schedule.exercises.map((e) => ({
+      exerciseName: e.name,
+      pattern: e.pattern,
+      numSets: e.defaultSets,
+    }));
+    updateDayExercises(activeUser, dateKey, exercisesToUpdate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedule.exercises, activeUser, dateKey]);
 
   // After ensureDayExists runs, todayWorkout will be populated with the synced exercises
   // Filter out exercises that were deleted from the shared schedule
