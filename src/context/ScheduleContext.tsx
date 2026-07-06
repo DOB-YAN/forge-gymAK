@@ -11,6 +11,7 @@ interface ScheduleContextType {
   fullSchedule: Record<DayOfWeek, PresetExercise[]>;
   setDaySchedule: (dayOfWeek: DayOfWeek, exercises: PresetExercise[]) => void;
   addExerciseToSchedule: (dayOfWeek: DayOfWeek, exercise: PresetExercise) => void;
+  updateExerciseInSchedule: (dayOfWeek: DayOfWeek, index: number, exercise: PresetExercise) => void;
   removeExerciseFromSchedule: (dayOfWeek: DayOfWeek, index: number) => void;
   getScheduleForDay: (dayOfWeek: DayOfWeek, defaultExercises: PresetExercise[]) => PresetExercise[];
   clearDaySchedule: (dayOfWeek: DayOfWeek) => void;
@@ -95,6 +96,15 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateExerciseInSchedule = useCallback((dayOfWeek: DayOfWeek, index: number, exercise: PresetExercise) => {
+    setFullSchedule((prev) => {
+      const updated = { ...prev };
+      if (!updated[dayOfWeek]) updated[dayOfWeek] = [];
+      updated[dayOfWeek] = updated[dayOfWeek].map((ex, i) => (i === index ? exercise : ex));
+      return updated;
+    });
+  }, []);
+
   const removeExerciseFromSchedule = useCallback((dayOfWeek: DayOfWeek, index: number) => {
     setFullSchedule((prev) => {
       const updated = { ...prev };
@@ -125,6 +135,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       fullSchedule,
       setDaySchedule,
       addExerciseToSchedule,
+      updateExerciseInSchedule,
       removeExerciseFromSchedule,
       getScheduleForDay,
       clearDaySchedule,
