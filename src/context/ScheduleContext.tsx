@@ -1,11 +1,19 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { PresetExercise, DayOfWeek } from '../types';
+import {
+  isFirebaseConfigured,
+  subscribeToSchedule,
+  saveScheduleToFirebase,
+  loadScheduleFromFirebase,
+} from '../services/firebase';
 
 interface ScheduleContextType {
-  customExercises: Record<DayOfWeek, PresetExercise[]>;
+  fullSchedule: Record<DayOfWeek, PresetExercise[]>;
+  setDaySchedule: (dayOfWeek: DayOfWeek, exercises: PresetExercise[]) => void;
   addExerciseToSchedule: (dayOfWeek: DayOfWeek, exercise: PresetExercise) => void;
   removeExerciseFromSchedule: (dayOfWeek: DayOfWeek, index: number) => void;
   getScheduleForDay: (dayOfWeek: DayOfWeek, defaultExercises: PresetExercise[]) => PresetExercise[];
+  clearDaySchedule: (dayOfWeek: DayOfWeek) => void;
 }
 
 const SCHEDULE_STORAGE_KEY = 'forge_gym_custom_schedule';
@@ -35,38 +43,91 @@ function saveToStorage(data: Record<DayOfWeek, PresetExercise[]>) {
 const ScheduleContext = createContext<ScheduleContextType | null>(null);
 
 export function ScheduleProvider({ children }: { children: ReactNode }) {
-  const [customExercises, setCustomExercises] = useState<Record<DayOfWeek, PresetExercise[]>>(() => loadFromStorage());
+  const [fullSchedule, setFullSchedule] = useState<Record<DayOfWeek, PresetExercise[]>>(() => loadFromStorage());
+  const firebaseConfigured = isFirebaseConfigured();
 
+  // Load from Firebase on mount if configured
   useEffect(() => {
-    saveToStorage(customExercises);
-  }, [customExercises]);
+    if (!firebaseConfigured) return;
+
+    loadScheduleFromFirebase().then((data) => {
+      if (data) {
+        setFullSchedule(data);
+        saveToStorage(data);
+      }
+    });
+  }, [firebaseConfigured]);
+
+  // Subscribe to Firebase updates
+  useEffect(() => {
+    if (!firebaseConfigured) return;
+
+    const unsubscribe = subscribeToSchedule((data) => {
+      setFullSchedule(data);
+      saveToStorage(data);
+    });
+
+    return () => unsubscribe();
+  }, [firebaseConfigured]);
+
+  // Save to Firebase
+  useEffect(() => {
+    if (!firebaseConfigured) return;
+    saveScheduleToFirebase(fullSchedule);
+  }, [fullSchedule, firebaseConfigured]);
+
+  // Also save to localStorage as backup
+  useEffect(() => {
+    saveToStorage(fullSchedule);
+  }, [fullSchedule]);
+
+  const setDaySchedule = useCallback((dayOfWeek: DayOfWeek, exercises: PresetExercise[]) => {
+    setFullSchedule((prev) => ({
+      ...prev,
+      [dayOfWeek]: exercises,
+    }));
+  }, []);
 
   const addExerciseToSchedule = useCallback((dayOfWeek: DayOfWeek, exercise: PresetExercise) => {
-    setCustomExercises((prev) => ({
+    setFullSchedule((prev) => ({
       ...prev,
       [dayOfWeek]: [...(prev[dayOfWeek] || []), exercise],
     }));
   }, []);
 
   const removeExerciseFromSchedule = useCallback((dayOfWeek: DayOfWeek, index: number) => {
-    setCustomExercises((prev) => {
+    setFullSchedule((prev) => {
       const updated = { ...prev };
       updated[dayOfWeek] = updated[dayOfWeek].filter((_, i) => i !== index);
       return updated;
     });
   }, []);
 
+  const clearDaySchedule = useCallback((dayOfWeek: DayOfWeek) => {
+    setFullSchedule((prev) => ({
+      ...prev,
+      [dayOfWeek]: [],
+    }));
+  }, []);
+
   const getScheduleForDay = useCallback((dayOfWeek: DayOfWeek, defaultExercises: PresetExercise[]) => {
-    const custom = customExercises[dayOfWeek] || [];
-    return [...defaultExercises, ...custom];
-  }, [customExercises]);
+    // If the user has customized this day, use their custom schedule
+    // Otherwise use the default schedule
+    const custom = fullSchedule[dayOfWeek];
+    if (custom !== undefined) {
+      return custom;
+    }
+    return defaultExercises;
+  }, [fullSchedule]);
 
   return (
     <ScheduleContext.Provider value={{
-      customExercises,
+      fullSchedule,
+      setDaySchedule,
       addExerciseToSchedule,
       removeExerciseFromSchedule,
       getScheduleForDay,
+      clearDaySchedule,
     }}>
       {children}
     </ScheduleContext.Provider>

@@ -92,7 +92,7 @@ function AddExerciseForm({ dayOfWeek, onClose }: AddExerciseFormProps) {
 export default function SchedulePage() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [addingToDay, setAddingToDay] = useState<string | null>(null);
-  const { removeExerciseFromSchedule, getScheduleForDay } = useSchedule();
+  const { removeExerciseFromSchedule, getScheduleForDay, clearDaySchedule } = useSchedule();
 
   return (
     <div className="space-y-3 page-enter">
@@ -129,7 +129,7 @@ export default function SchedulePage() {
                     {day.isRestDay
                       ? 'Rest day'
                       : `${day.muscleGroups.join(' · ')} · ${allExercises.length} exercises`}
-                  </p>
+                    </p>
                 </div>
               </div>
               <svg
@@ -150,67 +150,72 @@ export default function SchedulePage() {
                   </div>
                 ) : (
                   <div className="space-y-0.5 mb-3">
-                    {allExercises.map((ex, i) => {
-                      const isCustom = i >= day.exercises.length;
-                      return (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 group animate-slideUp"
-                          style={{ animationDelay: `${i * 30}ms` }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                    {allExercises.map((ex, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 group animate-slideUp"
+                        style={{ animationDelay: `${i * 30}ms` }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#fbbf24' }} />
+                          <span className="text-sm font-medium" style={{ color: 'rgba(203,213,225,0.9)' }}>{ex.name}</span>
+                          {ex.pattern !== 'normal' && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                              style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24' }}
+                            >
+                              {ex.pattern.replace('_', ' ')}
+                            </span>
+                          )}
+                          <span className="text-xs" style={{ color: 'rgba(148,163,184,0.4)' }}>{ex.defaultSets} sets</span>
+                        </div>
+                        <button
+                          onClick={() => removeExerciseFromSchedule(day.dayOfWeek, i)}
+                          className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
+                          style={{ color: 'rgba(239,68,68,0.5)' }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: isCustom ? '#4ade80' : '#fbbf24' }} />
-                            <span className="text-sm font-medium" style={{ color: 'rgba(203,213,225,0.9)' }}>{ex.name}</span>
-                            {ex.pattern !== 'normal' && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                                style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24' }}
-                              >
-                                {ex.pattern.replace('_', ' ')}
-                              </span>
-                            )}
-                            <span className="text-xs" style={{ color: 'rgba(148,163,184,0.4)' }}>{ex.defaultSets} sets</span>
-                            {isCustom && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                                style={{ background: 'rgba(74,222,128,0.1)', color: '#4ade80' }}
-                              >
-                                Custom
-                              </span>
-                            )}
-                          </div>
-                          {isCustom && (
-                            <button
-                              onClick={() => removeExerciseFromSchedule(day.dayOfWeek, i - day.exercises.length)}
-                              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
-                              style={{ color: 'rgba(239,68,68,0.5)' }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
-                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
 
-                {isAdding ? (
-                  <AddExerciseForm dayOfWeek={day.dayOfWeek} onClose={() => setAddingToDay(null)} />
-                ) : (
-                  <button
-                    onClick={() => setAddingToDay(day.dayOfWeek)}
-                    className="w-full py-2.5 rounded-xl border-2 border-dashed text-sm font-medium transition-all duration-200 active:scale-[0.98]"
-                    style={{ borderColor: 'rgba(251,191,36,0.15)', color: 'rgba(251,191,36,0.7)' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.3)'; e.currentTarget.style.background = 'rgba(251,191,36,0.05)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.15)'; e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    + Add Exercise
-                  </button>
-                )}
+                <div className="flex gap-2">
+                  {isAdding ? (
+                    <AddExerciseForm dayOfWeek={day.dayOfWeek} onClose={() => setAddingToDay(null)} />
+                  ) : (
+                    <button
+                      onClick={() => setAddingToDay(day.dayOfWeek)}
+                      className="flex-1 py-2.5 rounded-xl border-2 border-dashed text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+                      style={{ borderColor: 'rgba(251,191,36,0.15)', color: 'rgba(251,191,36,0.7)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.3)'; e.currentTarget.style.background = 'rgba(251,191,36,0.05)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(251,191,36,0.15)'; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      + Add Exercise
+                    </button>
+                  )}
+                  {allExercises.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Clear all exercises from ${day.label}?`)) {
+                          clearDaySchedule(day.dayOfWeek);
+                        }
+                      }}
+                      className="py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+                      style={{ background: 'rgba(239,68,68,0.1)', color: 'rgba(239,68,68,0.7)', border: '1px solid rgba(239,68,68,0.2)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.18)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>

@@ -7,7 +7,7 @@ import {
   onValue,
   type Unsubscribe,
 } from 'firebase/database';
-import type { WorkoutData, UserId, BodyMetricsData } from '../types';
+import type { WorkoutData, UserId, BodyMetricsData, DayOfWeek, PresetExercise } from '../types';
 
 // Firebase configuration - user needs to fill in their own values
 const FIREBASE_CONFIG = {
@@ -46,6 +46,7 @@ function getDatabaseInstance() {
 const WORKOUT_PATH = 'forge-gymAK/workouts';
 const DELETED_PATH = 'forge-gymAK/deletedExercises';
 const BODY_PATH = 'forge-gymAK/bodyMetrics';
+const SCHEDULE_PATH = 'forge-gymAK/customSchedule';
 
 // ─── Workout Data Sync ───
 
@@ -183,6 +184,52 @@ export function subscribeToBodyMetrics(
     });
   } catch (error) {
     console.warn('Firebase body metrics subscription failed:', error);
+    return () => {};
+  }
+}
+
+// ─── Custom Schedule Sync ───
+
+export async function saveScheduleToFirebase(
+  schedule: Record<DayOfWeek, PresetExercise[]>
+): Promise<void> {
+  try {
+    const db = getDatabaseInstance();
+    const scheduleRef = ref(db, SCHEDULE_PATH);
+    await set(scheduleRef, schedule);
+  } catch (error) {
+    console.warn('Firebase schedule save failed:', error);
+  }
+}
+
+export async function loadScheduleFromFirebase(): Promise<Record<DayOfWeek, PresetExercise[]> | null> {
+  try {
+    const db = getDatabaseInstance();
+    const scheduleRef = ref(db, SCHEDULE_PATH);
+    const snapshot = await get(scheduleRef);
+    if (snapshot.exists()) {
+      return snapshot.val() as Record<DayOfWeek, PresetExercise[]>;
+    }
+    return null;
+  } catch (error) {
+    console.warn('Firebase schedule load failed:', error);
+    return null;
+  }
+}
+
+export function subscribeToSchedule(
+  callback: (data: Record<DayOfWeek, PresetExercise[]>) => void
+): Unsubscribe {
+  try {
+    const db = getDatabaseInstance();
+    const scheduleRef = ref(db, SCHEDULE_PATH);
+    return onValue(scheduleRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.val() as Record<DayOfWeek, PresetExercise[]>);
+      }
+    });
+  } catch (error) {
+    console.warn('Firebase schedule subscription failed:', error);
     return () => {};
   }
 }
