@@ -14,7 +14,7 @@ const DAY_NAMES = [
 
 export default function TodayPage() {
   const { activeUser } = useUser();
-  const { getDayWorkout, ensureDayExists, updateDayExercises, deletedExercises, deleteExerciseFromDay } = useWorkout();
+  const { getDayWorkout, updateDayExercises, deletedExercises, deleteExerciseFromDay } = useWorkout();
   const { getScheduleForDay } = useSchedule();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -47,30 +47,18 @@ export default function TodayPage() {
   const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const todayDayOfWeek = daysOfWeek[today.getDay()];
 
-  // Auto-initialize the day's workout on mount (once) — even on rest days so you can add exercises
+  // Initialize/update the day's workout from schedule (preserves existing set data)
   useEffect(() => {
-    const exercisesToAdd = schedule.exercises.map((e) => ({
+    const exercisesFromSchedule = schedule.exercises.map((e) => ({
       exerciseName: e.name,
       pattern: e.pattern,
       numSets: e.defaultSets,
     }));
-    if (exercisesToAdd.length > 0) {
-      ensureDayExists(activeUser, dateKey, exercisesToAdd);
-    }
-    // Only run when user or date changes — NOT on every render
+    
+    // Always update to match the current schedule
+    updateDayExercises(activeUser, dateKey, exercisesFromSchedule);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeUser, dateKey]);
-
-  // Update exercises when schedule changes (preserves existing set data)
-  useEffect(() => {
-    const exercisesToUpdate = schedule.exercises.map((e) => ({
-      exerciseName: e.name,
-      pattern: e.pattern,
-      numSets: e.defaultSets,
-    }));
-    updateDayExercises(activeUser, dateKey, exercisesToUpdate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schedule.exercises, activeUser, dateKey]);
+  }, [activeUser, dateKey, schedule.exercises]);
 
   // After ensureDayExists runs, todayWorkout will be populated with the synced exercises
   // Filter out exercises that were deleted from the shared schedule
