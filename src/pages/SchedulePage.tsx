@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWorkout } from '../context/WorkoutContext';
 import { WEEKLY_SCHEDULE } from '../data/schedule';
 import type { ExercisePattern } from '../types';
+import { formatDateKey } from '../utils/dates';
 
 interface AddExerciseFormProps {
   dateKey: string;
@@ -18,8 +19,20 @@ function AddExerciseForm({ dateKey, onClose }: AddExerciseFormProps) {
     e.preventDefault();
     if (!name.trim()) return;
     // Add exercise to BOTH users so the schedule is shared
-    addExercise('abel', dateKey, name.trim(), pattern, numSets);
-    addExercise('keneni', dateKey, name.trim(), pattern, numSets);
+    // Use today's date as the base for the day of week
+    const today = new Date();
+    const days: ('sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday')[] = 
+      ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const targetDayIndex = days.indexOf(dateKey as any);
+    const targetDate = new Date(today);
+    const currentDayIndex = today.getDay();
+    const diff = targetDayIndex - currentDayIndex;
+    targetDate.setDate(today.getDate() + diff);
+    
+    const targetDateKey = formatDateKey(targetDate);
+    
+    addExercise('abel', targetDateKey, name.trim(), pattern, numSets);
+    addExercise('keneni', targetDateKey, name.trim(), pattern, numSets);
     setName('');
     setPattern('normal');
     setNumSets(4);

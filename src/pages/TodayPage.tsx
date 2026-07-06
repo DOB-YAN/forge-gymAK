@@ -13,7 +13,7 @@ const DAY_NAMES = [
 
 export default function TodayPage() {
   const { activeUser } = useUser();
-  const { getDayWorkout, ensureDayExists, deletedExercises } = useWorkout();
+  const { getDayWorkout, ensureDayExists, deletedExercises, deleteExerciseFromDay } = useWorkout();
   const [showAddModal, setShowAddModal] = useState(false);
 
   const today = new Date();
@@ -53,6 +53,10 @@ export default function TodayPage() {
   // Filter out exercises that were deleted from the shared schedule
   const deletedIndices: number[] = deletedExercises[todayDayOfWeek] ?? [];
   const exercises = (todayWorkout?.exercises ?? []).filter((_, i) => !deletedIndices.includes(i));
+  // Get the original indices for the filtered exercises
+  const exerciseIndices = (todayWorkout?.exercises ?? [])
+    .map((_, i) => i)
+    .filter((i) => !deletedIndices.includes(i));
   const hasStarted = (todayWorkout?.exercises?.length ?? 0) > 0;
 
   return (
@@ -107,9 +111,10 @@ export default function TodayPage() {
             <WorkoutCard
               key={`${exercise.exerciseName}-${i}`}
               exercise={exercise}
-              exerciseIndex={i}
+              exerciseIndex={exerciseIndices[i]}
               dateKey={dateKey}
-              previousExercise={lastWeekWorkout?.exercises[i]}
+              previousExercise={lastWeekWorkout?.exercises[exerciseIndices[i]]}
+              onDelete={() => deleteExerciseFromDay(activeUser, dateKey, exerciseIndices[i])}
             />
           ))}
         </div>

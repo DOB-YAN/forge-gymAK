@@ -26,6 +26,7 @@ interface WorkoutContextType {
   addSet: (userId: UserId, dateKey: string, exerciseIndex: number) => void;
   removeSet: (userId: UserId, dateKey: string, exerciseIndex: number, setIndex: number) => void;
   deleteExercise: (dayOfWeek: string, exerciseIndex: number) => void;
+  deleteExerciseFromDay: (userId: UserId, dateKey: string, exerciseIndex: number) => void;
   toggleCompleted: (userId: UserId, dateKey: string) => void;
   importData: (data: WorkoutData) => void;
   exportData: () => WorkoutData;
@@ -128,6 +129,17 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       return updated;
     });
   }, [syncDeletedToFirebase]);
+
+  const deleteExerciseFromDay = useCallback((userId: UserId, dateKey: string, exerciseIndex: number) => {
+    setWorkoutData((prev) => {
+      const newData = structuredClone(prev);
+      const day = newData[userId]?.[dateKey];
+      if (!day?.exercises[exerciseIndex]) return prev;
+      day.exercises.splice(exerciseIndex, 1);
+      syncToFirebase(userId, dateKey, day);
+      return newData;
+    });
+  }, [syncToFirebase]);
 
   const ensureDayExists = useCallback((
     userId: UserId,
@@ -325,6 +337,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       addSet,
       removeSet,
       deleteExercise,
+      deleteExerciseFromDay,
       toggleCompleted,
       importData,
       exportData,

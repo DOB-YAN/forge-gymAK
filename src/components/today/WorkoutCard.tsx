@@ -11,9 +11,10 @@ interface WorkoutCardProps {
   exerciseIndex: number;
   dateKey: string;
   previousExercise?: ExerciseLog;
+  onDelete?: () => void;
 }
 
-export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previousExercise }: WorkoutCardProps) {
+export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previousExercise, onDelete }: WorkoutCardProps) {
   const { activeUser } = useUser();
   const colors = USER_COLORS[activeUser];
   const { updateSet, addSet, removeSet } = useWorkout();
@@ -62,6 +63,20 @@ export default function WorkoutCard({ exercise, exerciseIndex, dateKey, previous
           >
             ⏱
           </button>
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (window.confirm('Delete this exercise?')) onDelete(); }}
+              className="p-1.5 rounded-lg transition-all duration-200 active:scale-90"
+              style={{ color: 'rgba(239,68,68,0.4)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(239,68,68,0.4)'; }}
+              title="Delete exercise"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
           {totalVolume > 0 && (
             <span className="text-xs font-medium" style={{ color: '#fbbf24' }}>
               {totalVolume} kg
