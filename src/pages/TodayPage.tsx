@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useWorkout } from '../context/WorkoutContext';
+import { useSchedule } from '../context/ScheduleContext';
 import { getDaySchedule } from '../data/schedule';
 import { formatDateKey, getLastWeekDateKey } from '../utils/dates';
 import WorkoutCard from '../components/today/WorkoutCard';
@@ -14,13 +15,20 @@ const DAY_NAMES = [
 export default function TodayPage() {
   const { activeUser } = useUser();
   const { getDayWorkout, ensureDayExists, deletedExercises, deleteExerciseFromDay } = useWorkout();
+  const { getScheduleForDay } = useSchedule();
   const [showAddModal, setShowAddModal] = useState(false);
 
   const today = new Date();
   const dateKey = formatDateKey(today);
-  const schedule = getDaySchedule(today);
+  const baseSchedule = getDaySchedule(today);
   const dayName = DAY_NAMES[today.getDay()];
   const lastWeekKey = getLastWeekDateKey(dateKey);
+
+  // Get the full schedule including custom exercises
+  const schedule = {
+    ...baseSchedule,
+    exercises: getScheduleForDay(baseSchedule.dayOfWeek, baseSchedule.exercises),
+  };
 
   const todayWorkout = getDayWorkout(activeUser, dateKey);
   const lastWeekWorkout = getDayWorkout(activeUser, lastWeekKey);
@@ -28,7 +36,11 @@ export default function TodayPage() {
   // Compute next day's schedule
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowSchedule = getDaySchedule(tomorrow);
+  const baseTomorrowSchedule = getDaySchedule(tomorrow);
+  const tomorrowSchedule = {
+    ...baseTomorrowSchedule,
+    exercises: getScheduleForDay(baseTomorrowSchedule.dayOfWeek, baseTomorrowSchedule.exercises),
+  };
   const tomorrowName = DAY_NAMES[tomorrow.getDay()];
 
   // Determine the dayOfWeek for today to filter deleted exercises
@@ -47,7 +59,7 @@ export default function TodayPage() {
     }
     // Only run when user or date changes — NOT on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeUser, dateKey]);
+  }, [activeUser, dateKey, schedule.exercises]);
 
   // After ensureDayExists runs, todayWorkout will be populated with the synced exercises
   // Filter out exercises that were deleted from the shared schedule

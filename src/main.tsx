@@ -5,6 +5,7 @@ import { UserProvider } from './context/UserContext';
 import { WorkoutProvider } from './context/WorkoutContext';
 import { TimerProvider } from './context/TimerContext';
 import { BodyProvider } from './context/BodyContext';
+import { ScheduleProvider } from './context/ScheduleContext';
 import App from './App';
 import './index.css';
 
@@ -21,13 +22,15 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename="/forge-gymAK">
       <UserProvider>
-        <WorkoutProvider>
-          <TimerProvider>
-            <BodyProvider>
-              <App />
-            </BodyProvider>
-          </TimerProvider>
-        </WorkoutProvider>
+        <ScheduleProvider>
+          <WorkoutProvider>
+            <TimerProvider>
+              <BodyProvider>
+                <App />
+              </BodyProvider>
+            </TimerProvider>
+          </WorkoutProvider>
+        </ScheduleProvider>
       </UserProvider>
     </BrowserRouter>
   </StrictMode>,
