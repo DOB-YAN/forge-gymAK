@@ -14,7 +14,7 @@ const DAY_NAMES = [
 
 export default function TodayPage() {
   const { activeUser } = useUser();
-  const { getDayWorkout, updateDayExercises, deletedExercises, deleteExerciseFromDay, moveExercise } = useWorkout();
+  const { getDayWorkout, updateDayExercises, deletedExercises, deleteExerciseFromDay, moveExercise, toggleCompleted } = useWorkout();
   const { getScheduleForDay } = useSchedule();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -69,6 +69,7 @@ export default function TodayPage() {
     .map((_, i) => i)
     .filter((i) => !deletedIndices.includes(i));
   const hasStarted = (todayWorkout?.exercises?.length ?? 0) > 0;
+  const isCompleted = todayWorkout?.completed ?? false;
 
   return (
     <div className="space-y-4 page-enter">
@@ -99,7 +100,7 @@ export default function TodayPage() {
       </div>
 
       {/* Rest day notice — shown when it's a rest day AND no custom exercises were added */}
-      {schedule.isRestDay && exercises.length === 0 && (
+      {schedule.isRestDay && exercises.length === 0 && !isCompleted && (
         <div
           className="rounded-xl p-6 text-center animate-scaleIn"
           style={{
@@ -115,8 +116,34 @@ export default function TodayPage() {
         </div>
       )}
 
+      {/* Workout completed message */}
+      {isCompleted && (
+        <div
+          className="rounded-xl p-8 text-center animate-scaleIn"
+          style={{
+            background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.05))',
+            border: '1px solid rgba(34,197,94,0.2)',
+          }}
+        >
+          <p className="text-4xl mb-3">🎉</p>
+          <p className="font-semibold text-lg" style={{ color: '#22c55e' }}>Workout Complete!</p>
+          <p className="text-sm mt-2" style={{ color: 'rgba(148,163,184,0.7)' }}>
+            Great job today! You crushed it 💪
+          </p>
+          <button
+            onClick={() => toggleCompleted(activeUser, dateKey)}
+            className="mt-4 px-6 py-2 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+            style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34,197,94,0.18)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(34,197,94,0.1)'; }}
+          >
+            Edit Workout
+          </button>
+        </div>
+      )}
+
       {/* Exercise cards — shown on any day (including rest days if you added exercises) */}
-      {exercises.length > 0 && (
+      {!isCompleted && exercises.length > 0 && (
         <div className="space-y-3">
           {exercises.map((exercise, i) => (
             <WorkoutCard
@@ -136,7 +163,7 @@ export default function TodayPage() {
       )}
 
       {/* Add custom exercise button — always show if there are exercises or it's a rest day */}
-      {(hasStarted || schedule.isRestDay) && (
+      {!isCompleted && (hasStarted || schedule.isRestDay) && (
         <div className="flex gap-2">
           <button
             onClick={() => setShowAddModal(true)}
@@ -151,35 +178,54 @@ export default function TodayPage() {
             + Custom Exercise
           </button>
           {hasStarted && (
-            <button
-              onClick={() => {
-                if (window.confirm('Clear all exercises from today\'s workout?')) {
-                  // Clear from context + localStorage
-                  const key = 'forge_gym_workout_data';
-                  try {
-                    const raw = localStorage.getItem(key);
-                    if (raw) {
-                      const data = JSON.parse(raw);
-                      if (data[activeUser]?.[dateKey]) {
-                        delete data[activeUser][dateKey];
-                        localStorage.setItem(key, JSON.stringify(data));
-                        window.location.reload();
+            <>
+              <button
+                onClick={() => {
+                  if (window.confirm('Finish today\'s workout?')) {
+                    toggleCompleted(activeUser, dateKey);
+                  }
+                }}
+                className="py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  background: 'rgba(34,197,94,0.1)',
+                  color: 'rgba(34,197,94,0.7)',
+                  border: '1px solid rgba(34,197,94,0.2)',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34,197,94,0.18)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(34,197,94,0.1)'; }}
+              >
+                ✓ Finish
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all exercises from today\'s workout?')) {
+                    // Clear from context + localStorage
+                    const key = 'forge_gym_workout_data';
+                    try {
+                      const raw = localStorage.getItem(key);
+                      if (raw) {
+                        const data = JSON.parse(raw);
+                        if (data[activeUser]?.[dateKey]) {
+                          delete data[activeUser][dateKey];
+                          localStorage.setItem(key, JSON.stringify(data));
+                          window.location.reload();
+                        }
                       }
-                    }
-                  } catch {}
-                }
-              }}
-              className="py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98]"
-              style={{
-                background: 'rgba(239,68,68,0.1)',
-                color: 'rgba(239,68,68,0.7)',
-                border: '1px solid rgba(239,68,68,0.2)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.18)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
-            >
-              ✕ Clear
-            </button>
+                    } catch {}
+                  }
+                }}
+                className="py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  background: 'rgba(239,68,68,0.1)',
+                  color: 'rgba(239,68,68,0.7)',
+                  border: '1px solid rgba(239,68,68,0.2)',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.18)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+              >
+                ✕ Clear
+              </button>
+            </>
           )}
         </div>
       )}
