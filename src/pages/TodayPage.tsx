@@ -142,6 +142,64 @@ export default function TodayPage() {
         </div>
       )}
 
+      {/* Tomorrow's workout - shown prominently when today is finished */}
+      {isCompleted && !tomorrowSchedule.isRestDay && (
+        <div
+          className="rounded-xl p-5 animate-slideUp"
+          style={{
+            background: 'linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.04))',
+            border: '1px solid rgba(251,191,36,0.2)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📋</span>
+              <h3 className="font-semibold" style={{ color: '#fbbf24' }}>
+                Tomorrow's Workout
+              </h3>
+            </div>
+            <span className="text-sm font-medium" style={{ color: 'rgba(251,191,36,0.7)' }}>
+              {tomorrowName}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {tomorrowSchedule.muscleGroups.map((mg) => (
+              <span key={mg} className="pill-amber text-[10px]">{mg}</span>
+            ))}
+          </div>
+
+          <div className="space-y-1">
+            {tomorrowSchedule.exercises.map((ex, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between py-1.5 px-3 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.04)' }}
+              >
+                <span className="text-sm" style={{ color: 'rgba(203,213,225,0.9)' }}>{ex.name}</span>
+                <span className="text-[10px]" style={{ color: 'rgba(148,163,184,0.6)' }}>{ex.defaultSets} sets</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isCompleted && tomorrowSchedule.isRestDay && (
+        <div
+          className="rounded-xl p-6 text-center animate-slideUp"
+          style={{
+            background: 'linear-gradient(135deg, rgba(30,30,50,0.8), rgba(22,22,40,0.6))',
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <p className="text-3xl mb-3">😴</p>
+          <p className="font-semibold" style={{ color: '#f1f5f9' }}>Tomorrow is Rest Day</p>
+          <p className="text-sm mt-1" style={{ color: 'rgba(148,163,184,0.6)' }}>
+            Take time to recover 💪
+          </p>
+        </div>
+      )}
+
       {/* Exercise cards — shown on any day (including rest days if you added exercises) */}
       {!isCompleted && exercises.length > 0 && (
         <div className="space-y-3">
@@ -239,61 +297,63 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* Coming Up Tomorrow */}
-      <div
-        className="rounded-xl p-4 transition-all duration-300 animate-slideUp"
-        style={{
-          background: 'linear-gradient(135deg, rgba(251,191,36,0.06), rgba(245,158,11,0.03))',
-          border: '1px solid rgba(251,191,36,0.15)',
-        }}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">📋</span>
-            <h3 className="text-sm font-semibold" style={{ color: '#fbbf24' }}>
-              {tomorrowSchedule.isRestDay ? 'Tomorrow is Rest Day' : 'Coming Up Tomorrow'}
-            </h3>
+      {/* Coming Up Tomorrow - only show when workout is not completed */}
+      {!isCompleted && (
+        <div
+          className="rounded-xl p-4 transition-all duration-300 animate-slideUp"
+          style={{
+            background: 'linear-gradient(135deg, rgba(251,191,36,0.06), rgba(245,158,11,0.03))',
+            border: '1px solid rgba(251,191,36,0.15)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">📋</span>
+              <h3 className="text-sm font-semibold" style={{ color: '#fbbf24' }}>
+                {tomorrowSchedule.isRestDay ? 'Tomorrow is Rest Day' : 'Coming Up Tomorrow'}
+              </h3>
+            </div>
+            <span className="text-xs font-medium" style={{ color: 'rgba(251,191,36,0.6)' }}>
+              {tomorrowName}
+            </span>
           </div>
-          <span className="text-xs font-medium" style={{ color: 'rgba(251,191,36,0.6)' }}>
-            {tomorrowName}
-          </span>
+
+          {!tomorrowSchedule.isRestDay && (
+            <>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {tomorrowSchedule.muscleGroups.map((mg) => (
+                  <span key={mg} className="pill-amber text-[10px]">{mg}</span>
+                ))}
+              </div>
+
+              <div className="space-y-1">
+                {tomorrowSchedule.exercises.map((ex, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between py-1.5 px-3 rounded-lg"
+                    style={{ background: 'rgba(255,255,255,0.03)' }}
+                  >
+                    <span className="text-sm" style={{ color: 'rgba(203,213,225,0.8)' }}>{ex.name}</span>
+                    <span className="text-[10px]" style={{ color: 'rgba(148,163,184,0.5)' }}>{ex.defaultSets} sets</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-3 pt-2" style={{ borderTop: '1px solid rgba(251,191,36,0.08)' }}>
+                <p className="text-[10px] text-center" style={{ color: 'rgba(148,163,184,0.4)' }}>
+                  Get ready — tomorrow's workout is waiting
+                </p>
+              </div>
+            </>
+          )}
+
+          {tomorrowSchedule.isRestDay && (
+            <p className="text-xs" style={{ color: 'rgba(148,163,184,0.6)' }}>
+              Take time to recover and come back stronger
+            </p>
+          )}
         </div>
-
-        {!tomorrowSchedule.isRestDay && (
-          <>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {tomorrowSchedule.muscleGroups.map((mg) => (
-                <span key={mg} className="pill-amber text-[10px]">{mg}</span>
-              ))}
-            </div>
-
-            <div className="space-y-1">
-              {tomorrowSchedule.exercises.map((ex, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between py-1.5 px-3 rounded-lg"
-                  style={{ background: 'rgba(255,255,255,0.03)' }}
-                >
-                  <span className="text-sm" style={{ color: 'rgba(203,213,225,0.8)' }}>{ex.name}</span>
-                  <span className="text-[10px]" style={{ color: 'rgba(148,163,184,0.5)' }}>{ex.defaultSets} sets</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3 pt-2" style={{ borderTop: '1px solid rgba(251,191,36,0.08)' }}>
-              <p className="text-[10px] text-center" style={{ color: 'rgba(148,163,184,0.4)' }}>
-                Get ready — tomorrow's workout is waiting
-              </p>
-            </div>
-          </>
-        )}
-
-        {tomorrowSchedule.isRestDay && (
-          <p className="text-xs" style={{ color: 'rgba(148,163,184,0.6)' }}>
-            Take time to recover and come back stronger
-          </p>
-        )}
-      </div>
+      )}
 
       <AddExerciseModal
         isOpen={showAddModal}
