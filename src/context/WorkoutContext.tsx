@@ -183,7 +183,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       const newData = structuredClone(prev);
       const day = newData[userId]?.[dateKey];
       if (!day?.exercises[exerciseIndex]) return prev;
-      if (day.exercises[exerciseIndex].sets.length >= 6) return prev;
+      if (day.exercises[exerciseIndex].sets.length >= 10) return prev;
       day.exercises[exerciseIndex].sets.push({ weightKg: 0, reps: 0, timestamp: Date.now() });
       return newData;
     });
